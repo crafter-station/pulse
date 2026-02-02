@@ -14,6 +14,7 @@ interface LeaderboardMember {
 export function Leaderboard() {
 	const [leaderboard, setLeaderboard] = useState<LeaderboardMember[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [weekInfo, setWeekInfo] = useState<{ year: number; week: number } | null>(null);
 
 	useEffect(() => {
 		const fetchLeaderboard = async () => {
@@ -29,9 +30,26 @@ export function Leaderboard() {
 			}
 		};
 
-		fetchLeaderboard();
+		const fetchStats = async () => {
+			try {
+				const res = await fetch("/api/stats");
+				if (!res.ok) throw new Error("Failed to fetch");
+				const data = await res.json();
+				if (data.currentWeek) {
+					setWeekInfo(data.currentWeek);
+				}
+			} catch (err) {
+				console.error("Error fetching stats:", err);
+			}
+		};
 
-		const interval = setInterval(fetchLeaderboard, 60000);
+		fetchLeaderboard();
+		fetchStats();
+
+		const interval = setInterval(() => {
+			fetchLeaderboard();
+			fetchStats();
+		}, 60000);
 		return () => clearInterval(interval);
 	}, []);
 
@@ -47,7 +65,11 @@ export function Leaderboard() {
 			<div className="mx-auto max-w-7xl">
 				<div className="mb-6 md:mb-8">
 					<h2 className="text-2xl md:text-3xl font-black text-white mb-2">Weekly Leaderboard</h2>
-					<p className="text-sm md:text-base text-[#737373]">Top shippers in the last 7 days</p>
+					<p className="text-sm md:text-base text-[#737373]">
+						{weekInfo
+							? `This week's top shippers (Week ${weekInfo.week}, ${weekInfo.year})`
+							: "This week's top shippers"}
+					</p>
 				</div>
 				{loading ? (
 					<div className="space-y-4">
