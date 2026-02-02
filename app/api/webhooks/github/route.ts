@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Webhooks } from "@octokit/webhooks";
+import { Octokit } from "@octokit/rest";
 import { db } from "@/lib/db";
 import { commits, repos, contributors } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 const webhooks = new Webhooks({
 	secret: process.env.GITHUB_WEBHOOK_SECRET || "",
+});
+
+const octokit = new Octokit({
+	auth: process.env.GITHUB_TOKEN,
 });
 
 export async function POST(request: NextRequest) {
@@ -55,14 +60,29 @@ export async function POST(request: NextRequest) {
 			});
 
 		for (const commit of payload.commits) {
+			let additions = 0;
+			let deletions = 0;
+
+			try {
+				const { data: commitDetails } = await octokit.repos.getCommit({
+					owner: payload.repository.owner.login || payload.repository.owner.name,
+					repo: repoName,
+					ref: commit.id,
+				});
+				additions = commitDetails.stats?.additions || 0;
+				deletions = commitDetails.stats?.deletions || 0;
+			} catch (error) {
+				console.error(`Failed to fetch stats for commit ${commit.id}:`, error);
+			}
+
 			const commitData = {
 				id: commit.id,
 				repoName,
 				authorUsername: commit.author.username || pusher,
 				authorAvatarUrl: pusherAvatar,
 				message: commit.message,
-				additions: commit.added?.length || 0,
-				deletions: commit.removed?.length || 0,
+				additions,
+				deletions,
 				commitUrl: commit.url,
 				pushedAt: new Date(commit.timestamp),
 			};
