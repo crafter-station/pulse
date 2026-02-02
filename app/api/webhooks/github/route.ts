@@ -19,20 +19,11 @@ export async function POST(request: NextRequest) {
 		const signature = request.headers.get("x-hub-signature-256");
 		const event = request.headers.get("x-github-event");
 
-		// DEBUG: Log secret info (remove after debugging)
-		const secret = process.env.GITHUB_WEBHOOK_SECRET || "";
-		console.log("DEBUG - Secret defined:", !!secret);
-		console.log("DEBUG - Secret length:", secret.length);
-		console.log("DEBUG - Secret preview:", secret.substring(0, 8) + "..." + secret.substring(secret.length - 8));
-		console.log("DEBUG - Signature from GitHub:", signature);
-
 		if (!signature) {
 			return NextResponse.json({ error: "Missing signature" }, { status: 401 });
 		}
 
 		const isValid = await webhooks.verify(body, signature);
-		console.log("DEBUG - Signature valid:", isValid);
-
 		if (!isValid) {
 			return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 		}

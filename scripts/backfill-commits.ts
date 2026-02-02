@@ -3,105 +3,121 @@ import { db } from "../lib/db";
 import { commits, repos, contributors } from "../lib/db/schema";
 import { sql } from "drizzle-orm";
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const octokit = new Octokit({
+	auth: process.env.GITHUB_TOKEN,
+});
+
 const ORG_NAME = "crafter-station";
-
-if (!GITHUB_TOKEN) {
-	console.error("Error: GITHUB_TOKEN environment variable is not set");
-	process.exit(1);
-}
-
-const octokit = new Octokit({ auth: GITHUB_TOKEN });
+const DAYS_BACK = 30; // How many days to backfill
 
 async function backfillCommits() {
-	try {
-		console.log(`Fetching repositories from ${ORG_NAME}...`);
+	console.log(`🔄 Starting backfill for ${ORG_NAME}...`);
 
-		const { data: orgRepos } = await octokit.repos.listForOrg({
-			org: ORG_NAME,
-			per_page: 100,
-			sort: "updated",
-		});
+	// Get all repos in the org
+	const { data: allRepos } = await octokit.repos.listForOrg({
+		org: ORG_NAME,
+		per_page: 100,
+	});
 
-		console.log(`Found ${orgRepos.length} repositories\n`);
+	console.log(`📦 Found ${allRepos.length} repos in ${ORG_NAME}`);
 
-		for (const repo of orgRepos) {
-			console.log(`Processing ${repo.name}...`);
+	const since = new Date();
+	since.setDate(since.getDate() - DAYS_BACK);
 
+	let totalCommits = 0;
+
+	for (const repo of allRepos) {
+		console.log(`\n📁 Processing ${repo.name}...`);
+
+		try {
+			// Get commits from main/master branch
+			const { data: repoCommits } = await octokit.repos.listCommits({
+				owner: ORG_NAME,
+				repo: repo.name,
+				sha: repo.default_branch,
+				since: since.toISOString(),
+				per_page: 100,
+			});
+
+			console.log(`  Found ${repoCommits.length} commits`);
+
+			if (repoCommits.length === 0) {
+				continue;
+			}
+
+			// Upsert repo
 			await db
 				.insert(repos)
 				.values({
 					name: repo.name,
 					fullName: repo.full_name,
-					isActive: true,
-					lastPushAt: repo.pushed_at ? new Date(repo.pushed_at) : null,
+					lastPushAt: new Date(repoCommits[0].commit.author?.date || new Date()),
+					updatedAt: new Date(),
 				})
-				.onConflictDoNothing();
-
-			const thirtyDaysAgo = new Date();
-			thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-			try {
-				const { data: repoCommits } = await octokit.repos.listCommits({
-					owner: ORG_NAME,
-					repo: repo.name,
-					since: thirtyDaysAgo.toISOString(),
-					per_page: 100,
+				.onConflictDoUpdate({
+					target: repos.name,
+					set: {
+						lastPushAt: new Date(repoCommits[0].commit.author?.date || new Date()),
+						updatedAt: new Date(),
+					},
 				});
 
-				console.log(`  Found ${repoCommits.length} commits in last 30 days`);
+			// Process each commit
+			for (const commit of repoCommits) {
+				const authorUsername =
+					commit.author?.login || commit.commit.author?.name || "unknown";
+				const authorAvatarUrl = commit.author?.avatar_url || "";
 
-				for (const commit of repoCommits) {
-					if (!commit.sha || !commit.commit.message) continue;
+				// Get commit details for additions/deletions
+				const { data: commitDetails } = await octokit.repos.getCommit({
+					owner: ORG_NAME,
+					repo: repo.name,
+					ref: commit.sha,
+				});
 
-					const authorUsername = commit.author?.login || commit.commit.author?.name || "unknown";
-					const authorAvatarUrl = commit.author?.avatar_url || `https://github.com/${commit.author?.login || 'ghost'}.png`;
+				const commitData = {
+					id: commit.sha,
+					repoName: repo.name,
+					authorUsername,
+					authorAvatarUrl,
+					message: commit.commit.message,
+					additions: commitDetails.stats?.additions || 0,
+					deletions: commitDetails.stats?.deletions || 0,
+					commitUrl: commit.html_url,
+					pushedAt: new Date(commit.commit.author?.date || new Date()),
+				};
 
-					const commitData = {
-						id: commit.sha,
-						repoName: repo.name,
-						authorUsername,
-						authorAvatarUrl,
-						message: commit.commit.message.split("\n")[0],
-						additions: 0,
-						deletions: 0,
-						commitUrl: commit.html_url,
-						pushedAt: new Date(commit.commit.author?.date || new Date()),
-					};
+				// Insert commit (skip if already exists)
+				await db.insert(commits).values(commitData).onConflictDoNothing();
 
-					await db.insert(commits).values(commitData).onConflictDoNothing();
-
-					await db
-						.insert(contributors)
-						.values({
-							username: authorUsername,
-							avatarUrl: authorAvatarUrl,
-							totalCommits: 1,
+				// Upsert contributor
+				await db
+					.insert(contributors)
+					.values({
+						username: authorUsername,
+						avatarUrl: authorAvatarUrl,
+						totalCommits: 1,
+						lastCommitAt: commitData.pushedAt,
+					})
+					.onConflictDoUpdate({
+						target: contributors.username,
+						set: {
+							totalCommits: sql`${contributors.totalCommits} + 1`,
 							lastCommitAt: commitData.pushedAt,
-						})
-						.onConflictDoUpdate({
-							target: contributors.username,
-							set: {
-								totalCommits: sql`${contributors.totalCommits} + 1`,
-								lastCommitAt: commitData.pushedAt,
-								updatedAt: new Date(),
-							},
-						});
-				}
-			} catch (error: any) {
-				if (error.status === 409) {
-					console.log(`  Skipping ${repo.name} (empty repository)`);
-				} else {
-					console.error(`  Error fetching commits for ${repo.name}:`, error.message);
-				}
-			}
-		}
+							updatedAt: new Date(),
+						},
+					});
 
-		console.log("\nBackfill complete!");
-	} catch (error) {
-		console.error("Backfill error:", error);
-		process.exit(1);
+				totalCommits++;
+			}
+
+			console.log(`  ✅ Processed ${repoCommits.length} commits from ${repo.name}`);
+		} catch (error) {
+			console.error(`  ❌ Error processing ${repo.name}:`, error);
+		}
 	}
+
+	console.log(`\n✨ Backfill complete! Added ${totalCommits} commits`);
 }
 
-backfillCommits();
+backfillCommits().catch(console.error);
