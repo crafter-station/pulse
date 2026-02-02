@@ -1,66 +1,81 @@
 /**
  * Utilities for Peru timezone (America/Lima, GMT-5)
+ * All dates in DB are stored in UTC. These functions help convert between Peru time and UTC.
  */
 
 export const PERU_TIMEZONE = "America/Lima";
+export const PERU_UTC_OFFSET = -5; // Peru is UTC-5
 
 /**
  * Get current date/time in Peru timezone
  */
 export function getPeruNow(): Date {
-	return new Date(new Date().toLocaleString("en-US", { timeZone: PERU_TIMEZONE }));
+	const now = new Date();
+	return new Date(now.toLocaleString("en-US", { timeZone: PERU_TIMEZONE }));
 }
 
 /**
- * Get start of today in Peru timezone (00:00:00)
+ * Get start of today in Peru (00:00:00 Peru time), returned as UTC Date for DB queries
  */
 export function getPeruTodayStart(): Date {
-	const now = getPeruNow();
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+	const now = new Date();
+	const peruNowStr = now.toLocaleString("en-US", { timeZone: PERU_TIMEZONE });
+	const peruNow = new Date(peruNowStr);
+
+	// Create midnight Peru time
+	const peruMidnight = new Date(
+		peruNow.getFullYear(),
+		peruNow.getMonth(),
+		peruNow.getDate(),
+		0,
+		0,
+		0,
+		0,
+	);
+
+	// Add 5 hours to convert Peru time to UTC (Peru is UTC-5, so UTC is 5 hours ahead)
+	return new Date(peruMidnight.getTime() - PERU_UTC_OFFSET * 60 * 60 * 1000);
 }
 
 /**
- * Get end of today in Peru timezone (23:59:59)
- */
-export function getPeruTodayEnd(): Date {
-	const now = getPeruNow();
-	return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-}
-
-/**
- * Get start of current week in Peru timezone (Monday 12:00 PM)
+ * Get start of current week (Monday 12:00 PM Peru time), returned as UTC Date for DB queries
  */
 export function getPeruWeekStart(): Date {
-	const now = getPeruNow();
-	const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-	const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+	const now = new Date();
+	const peruNowStr = now.toLocaleString("en-US", { timeZone: PERU_TIMEZONE });
+	const peruNow = new Date(peruNowStr);
 
-	const monday = new Date(now);
-	monday.setDate(now.getDate() + daysToMonday);
-	monday.setHours(12, 0, 0, 0); // Monday 12:00 PM
+	const dayOfWeek = peruNow.getDay(); // 0 = Sunday, 1 = Monday
+	const currentHour = peruNow.getHours();
 
-	return monday;
-}
+	// Days to go back to Monday
+	let daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
-/**
- * Get end of current week in Peru timezone (Next Monday 11:59:59 AM)
- */
-export function getPeruWeekEnd(): Date {
-	const weekStart = getPeruWeekStart();
-	const weekEnd = new Date(weekStart);
-	weekEnd.setDate(weekStart.getDate() + 7);
-	weekEnd.setHours(11, 59, 59, 999); // Next Monday 11:59 AM
+	// If today is Monday and it's before 12:00 PM, use last Monday
+	if (dayOfWeek === 1 && currentHour < 12) {
+		daysToMonday = -7;
+	}
 
-	return weekEnd;
+	// Create Monday 12:00 PM Peru time
+	const monday = new Date(peruNow);
+	monday.setDate(peruNow.getDate() + daysToMonday);
+	monday.setHours(12, 0, 0, 0);
+
+	// Convert Peru time to UTC (add 5 hours)
+	return new Date(monday.getTime() - PERU_UTC_OFFSET * 60 * 60 * 1000);
 }
 
 /**
  * Get ISO week number for Peru date
  */
-export function getPeruISOWeek(date: Date = getPeruNow()): { year: number; week: number } {
-	const peruDate = new Date(date.toLocaleString("en-US", { timeZone: PERU_TIMEZONE }));
-	const yearStart = new Date(Date.UTC(peruDate.getFullYear(), 0, 1));
-	const weekNumber = Math.ceil(((peruDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+export function getPeruISOWeek(date: Date = new Date()): { year: number; week: number } {
+	const peruDateStr = date.toLocaleString("en-US", { timeZone: PERU_TIMEZONE });
+	const peruDate = new Date(peruDateStr);
+
+	const yearStart = new Date(peruDate.getFullYear(), 0, 1);
+	const weekNumber = Math.ceil(
+		((peruDate.getTime() - yearStart.getTime()) / 86400000 + yearStart.getDay() + 1) / 7,
+	);
 
 	return {
 		year: peruDate.getFullYear(),
@@ -81,10 +96,18 @@ export function formatPeruDate(date: Date): string {
 
 /**
  * Format relative time (e.g., "2m ago", "3h ago", "5d ago")
+ * @param utcDate - Date in UTC (as stored in DB)
  */
-export function formatRelativeTime(date: Date): string {
-	const now = getPeruNow();
-	const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+export function formatRelativeTime(utcDate: Date | string): string {
+	const now = new Date();
+	const commitDate = new Date(utcDate);
+
+	const diffInMs = now.getTime() - commitDate.getTime();
+	const diffInSeconds = Math.floor(diffInMs / 1000);
+
+	if (diffInSeconds < 0) {
+		return "just now";
+	}
 
 	if (diffInSeconds < 60) {
 		return "just now";
