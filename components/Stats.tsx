@@ -102,7 +102,7 @@ export function Stats() {
 						<div className="space-y-3">
 							<div className="flex items-center justify-between">
 								<span className="text-sm text-[#A3A3A3]">Lines added</span>
-								<span className="text-lg font-bold text-green-500">+{formatNumber(stats.weekStats.additions)}</span>
+								<span className="text-lg font-bold text-[#FFD800]">+{formatNumber(stats.weekStats.additions)}</span>
 							</div>
 							<div className="h-px bg-[#262626]" />
 							<div className="flex items-center justify-between">
@@ -127,7 +127,7 @@ export function Stats() {
 						<div className="space-y-3">
 							<div className="flex items-center justify-between">
 								<span className="text-sm text-[#A3A3A3]">Lines added</span>
-								<span className="text-lg font-bold text-green-500">+{formatNumber(stats.monthStats.additions)}</span>
+								<span className="text-lg font-bold text-[#FFD800]">+{formatNumber(stats.monthStats.additions)}</span>
 							</div>
 							<div className="h-px bg-[#262626]" />
 							<div className="flex items-center justify-between">
