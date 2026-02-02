@@ -38,7 +38,7 @@ export function getPeruTodayStart(): Date {
 }
 
 /**
- * Get start of current week (Monday 12:00 PM Peru time), returned as UTC Date for DB queries
+ * Get start of current week (Monday 00:00 Peru time), returned as UTC Date for DB queries
  */
 export function getPeruWeekStart(): Date {
 	const now = new Date();
@@ -46,20 +46,14 @@ export function getPeruWeekStart(): Date {
 	const peruNow = new Date(peruNowStr);
 
 	const dayOfWeek = peruNow.getDay(); // 0 = Sunday, 1 = Monday
-	const currentHour = peruNow.getHours();
 
 	// Days to go back to Monday
-	let daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+	const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
-	// If today is Monday and it's before 12:00 PM, use last Monday
-	if (dayOfWeek === 1 && currentHour < 12) {
-		daysToMonday = -7;
-	}
-
-	// Create Monday 12:00 PM Peru time
+	// Create Monday 00:00 (midnight) Peru time
 	const monday = new Date(peruNow);
 	monday.setDate(peruNow.getDate() + daysToMonday);
-	monday.setHours(12, 0, 0, 0);
+	monday.setHours(0, 0, 0, 0);
 
 	// Convert Peru time to UTC (add 5 hours)
 	return new Date(monday.getTime() - PERU_UTC_OFFSET * 60 * 60 * 1000);
