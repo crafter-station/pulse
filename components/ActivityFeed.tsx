@@ -97,20 +97,20 @@ export function ActivityFeed() {
 	}
 
 	return (
-		<section id="activity" className="py-20 px-6 bg-[#0A0A0A]">
+		<section id="activity" className="py-12 md:py-20 px-4 md:px-6 bg-[#0A0A0A]">
 			<div className="mx-auto max-w-7xl">
-				<div className="flex items-center justify-between mb-6">
+				<div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
 					<div>
-						<h2 className="text-3xl font-black text-white mb-2">Recent Activity</h2>
-						<p className="text-[#737373]">
+						<h2 className="text-2xl md:text-3xl font-black text-white mb-2">Recent Activity</h2>
+						<p className="text-sm md:text-base text-[#737373]">
 							{filteredActivity.length} {filteredActivity.length === 1 ? "commit" : "commits"}
 						</p>
 					</div>
-					<div className="flex items-center gap-3">
-						<div className="flex gap-2 bg-[#171717] border border-[#262626] p-1">
+					<div className="flex items-center gap-2 md:gap-3">
+						<div className="flex gap-1 md:gap-2 bg-[#171717] border border-[#262626] p-1">
 							<button
 								onClick={() => setViewMode("compact")}
-								className={`px-3 py-1.5 text-xs font-bold transition-colors ${
+								className={`px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold transition-colors ${
 									viewMode === "compact"
 										? "bg-[#FFD800] text-[#0A0A0A]"
 										: "text-[#737373] hover:text-white"
@@ -120,7 +120,7 @@ export function ActivityFeed() {
 							</button>
 							<button
 								onClick={() => setViewMode("detailed")}
-								className={`px-3 py-1.5 text-xs font-bold transition-colors ${
+								className={`px-2 md:px-3 py-1 md:py-1.5 text-[10px] md:text-xs font-bold transition-colors ${
 									viewMode === "detailed"
 										? "bg-[#FFD800] text-[#0A0A0A]"
 										: "text-[#737373] hover:text-white"
@@ -129,14 +129,14 @@ export function ActivityFeed() {
 								DETAILED
 							</button>
 						</div>
-						<div className="flex items-center gap-2 px-4 py-2 bg-[#171717] border border-[#262626]">
-							<span className={`w-2 h-2 rounded-full ${error ? "bg-red-500" : "bg-[#FFD800] animate-pulse"}`} />
-							<span className="text-sm text-[#737373]">{error ? "Error" : "Live"}</span>
+						<div className="flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 bg-[#171717] border border-[#262626]">
+							<span className={`w-2 h-2 rounded-full ${error ? "bg-red-500" : "bg-green-500 animate-pulse"}`} />
+							<span className="text-xs md:text-sm text-[#737373]">{error ? "Error" : "Live"}</span>
 						</div>
 					</div>
 				</div>
 
-				<div className="flex gap-3 mb-6 flex-wrap">
+				<div className="flex flex-col sm:flex-row gap-2 md:gap-3 mb-6">
 					<input
 						type="text"
 						placeholder="Search commits..."
@@ -194,30 +194,32 @@ export function ActivityFeed() {
 								href={item.commitUrl}
 								target="_blank"
 								rel="noopener noreferrer"
-								className="group flex items-center gap-3 px-4 py-3 bg-[#171717] border border-[#262626] hover:border-[#FFD800]/30 transition-all"
+								className="group flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 bg-[#171717] border border-[#262626] hover:border-[#FFD800]/30 transition-all"
 							>
 								{item.avatarUrl ? (
 									<img
 										src={item.avatarUrl}
 										alt={item.author}
-										className="w-8 h-8 rounded-full ring-1 ring-[#262626]"
+										className="w-7 h-7 md:w-8 md:h-8 rounded-full ring-1 ring-[#262626] flex-shrink-0"
 									/>
 								) : (
-									<div className="w-8 h-8 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-xs rounded-full">
+									<div className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-xs rounded-full flex-shrink-0">
 										{item.author[0]?.toUpperCase() || "?"}
 									</div>
 								)}
-								<div className="flex-1 min-w-0 flex items-center gap-3">
-									<span className="font-bold text-white text-sm">{item.author}</span>
-									<span className="px-2 py-0.5 text-xs font-bold bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20 font-mono">
-										{item.repo}
-									</span>
-									<span className="text-[#A3A3A3] text-sm font-mono truncate flex-1">{item.message}</span>
+								<div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+									<div className="flex items-center gap-2 flex-shrink-0">
+										<span className="font-bold text-white text-xs md:text-sm">{item.author}</span>
+										<span className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs font-bold bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20 font-mono">
+											{item.repo}
+										</span>
+									</div>
+									<span className="text-[#A3A3A3] text-xs md:text-sm font-mono truncate">{item.message}</span>
 								</div>
-								<div className="flex items-center gap-2 text-xs flex-shrink-0">
-									<span className="text-[#FFD800] font-mono">+{formatNumber(item.additions)}</span>
-									<span className="text-red-500 font-mono">-{formatNumber(item.deletions)}</span>
-									<span className="text-[#737373] ml-2">{item.time}</span>
+								<div className="hidden sm:flex items-center gap-1.5 md:gap-2 text-xs flex-shrink-0">
+									<span className="text-green-500 font-mono text-[10px] md:text-xs">+{formatNumber(item.additions)}</span>
+									<span className="text-red-500 font-mono text-[10px] md:text-xs">-{formatNumber(item.deletions)}</span>
+									<span className="text-[#737373] ml-1 md:ml-2 text-[10px] md:text-xs">{item.time}</span>
 								</div>
 							</a>
 						))}
@@ -230,41 +232,41 @@ export function ActivityFeed() {
 								href={item.commitUrl}
 								target="_blank"
 								rel="noopener noreferrer"
-								className="group flex items-start gap-4 p-5 bg-[#171717] border border-[#262626] hover:border-[#FFD800]/30 hover:bg-[#171717] transition-all"
+								className="group flex items-start gap-3 md:gap-4 p-4 md:p-5 bg-[#171717] border border-[#262626] hover:border-[#FFD800]/30 hover:bg-[#171717] transition-all"
 							>
-								<div className="flex-shrink-0 pt-1">
+								<div className="flex-shrink-0 pt-0.5 md:pt-1">
 									{item.avatarUrl ? (
 										<img
 											src={item.avatarUrl}
 											alt={item.author}
-											className="w-12 h-12 rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all"
+											className="w-10 h-10 md:w-12 md:h-12 rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all"
 										/>
 									) : (
-										<div className="w-12 h-12 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-lg rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all">
+										<div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-base md:text-lg rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all">
 											{item.author[0]?.toUpperCase() || "?"}
 										</div>
 									)}
 								</div>
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2 mb-2 flex-wrap">
-										<span className="font-bold text-white">{item.author}</span>
-										<span className="text-[#737373]">pushed to</span>
-										<span className="px-2 py-1 text-xs font-bold bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20 font-mono">
+										<span className="font-bold text-white text-sm md:text-base">{item.author}</span>
+										<span className="text-[#737373] text-xs md:text-sm">pushed to</span>
+										<span className="px-2 py-1 text-[10px] md:text-xs font-bold bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20 font-mono">
 											{item.repo}
 										</span>
-										<span className="text-[#737373] text-sm ml-auto">{item.time}</span>
+										<span className="text-[#737373] text-xs md:text-sm ml-auto">{item.time}</span>
 									</div>
-									<p className="text-[#A3A3A3] font-mono text-sm mb-3 line-clamp-2">
+									<p className="text-[#A3A3A3] font-mono text-xs md:text-sm mb-3 line-clamp-2">
 										{item.message}
 									</p>
-									<div className="flex items-center gap-4">
-										<div className="flex items-center gap-2 px-3 py-1.5 bg-[#FFD800]/10 border border-[#FFD800]/20">
-											<span className="text-xs font-bold text-[#FFD800]">+{formatNumber(item.additions)}</span>
+									<div className="flex items-center gap-2 md:gap-4 flex-wrap">
+										<div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 bg-green-500/10 border border-green-500/20">
+											<span className="text-[10px] md:text-xs font-bold text-green-500">+{formatNumber(item.additions)}</span>
 										</div>
-										<div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20">
-											<span className="text-xs font-bold text-red-500">-{formatNumber(item.deletions)}</span>
+										<div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 bg-red-500/10 border border-red-500/20">
+											<span className="text-[10px] md:text-xs font-bold text-red-500">-{formatNumber(item.deletions)}</span>
 										</div>
-										<div className="ml-auto text-xs text-[#737373] group-hover:text-[#FFD800] transition-colors">
+										<div className="ml-auto text-[10px] md:text-xs text-[#737373] group-hover:text-[#FFD800] transition-colors">
 											View commit →
 										</div>
 									</div>

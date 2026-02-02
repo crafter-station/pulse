@@ -43,11 +43,11 @@ export function Leaderboard() {
 	};
 
 	return (
-		<section id="leaderboard" className="py-20 px-6 bg-[#171717]/20">
+		<section id="leaderboard" className="py-12 md:py-20 px-4 md:px-6 bg-[#171717]/20">
 			<div className="mx-auto max-w-7xl">
-				<div className="mb-8">
-					<h2 className="text-3xl font-black text-white mb-2">Weekly Leaderboard</h2>
-					<p className="text-[#737373]">Top shippers in the last 7 days</p>
+				<div className="mb-6 md:mb-8">
+					<h2 className="text-2xl md:text-3xl font-black text-white mb-2">Weekly Leaderboard</h2>
+					<p className="text-sm md:text-base text-[#737373]">Top shippers in the last 7 days</p>
 				</div>
 				{loading ? (
 					<div className="space-y-4">
@@ -66,30 +66,32 @@ export function Leaderboard() {
 					</div>
 				) : (
 					<>
-						<div className="relative overflow-hidden p-8 border bg-gradient-to-br from-[#FFD800]/10 to-[#FFD800]/5 border-[#FFD800]/30 mb-4">
+						<div className="relative overflow-hidden p-4 md:p-8 border bg-gradient-to-br from-[#FFD800]/10 to-[#FFD800]/5 border-[#FFD800]/30 mb-4">
 							<div className="absolute top-0 right-0 w-40 h-40 bg-[#FFD800]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-							<div className="relative flex items-center gap-6">
-								<div className="text-5xl">🥇</div>
+							<div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6">
+								<div className="text-4xl md:text-5xl">🥇</div>
 								{leaderboard[0].avatarUrl ? (
 									<img
 										src={leaderboard[0].avatarUrl}
 										alt={leaderboard[0].name}
-										className="w-24 h-24 rounded-full ring-4 ring-[#FFD800]/20"
+										className="w-20 h-20 md:w-24 md:h-24 rounded-full ring-4 ring-[#FFD800]/20"
 									/>
 								) : (
-									<div className="w-24 h-24 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-3xl rounded-full">
+									<div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-2xl md:text-3xl rounded-full">
 										{leaderboard[0].name[0]?.toUpperCase() || "?"}
 									</div>
 								)}
-								<div className="flex-1">
-									<div className="text-3xl font-black text-white mb-2">{leaderboard[0].name}</div>
-									<div className="flex items-center gap-6 text-lg">
+								<div className="flex-1 text-center sm:text-left">
+									<div className="text-2xl md:text-3xl font-black text-white mb-2">{leaderboard[0].name}</div>
+									<div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-6 text-base md:text-lg">
 										<span className="font-bold text-[#FFD800]">{leaderboard[0].commits} commits</span>
-										<span className="text-[#FFD800] font-mono">+{formatNumber(leaderboard[0].additions)}</span>
-										<span className="text-red-500 font-mono">-{formatNumber(leaderboard[0].deletions)}</span>
+										<div className="flex items-center gap-3 md:gap-4">
+											<span className="text-green-500 font-mono text-sm md:text-base">+{formatNumber(leaderboard[0].additions)}</span>
+											<span className="text-red-500 font-mono text-sm md:text-base">-{formatNumber(leaderboard[0].deletions)}</span>
+										</div>
 									</div>
 								</div>
-								<div className="absolute top-6 right-6 px-4 py-2 bg-[#FFD800] text-[#0A0A0A] text-sm font-black uppercase tracking-wider">
+								<div className="sm:absolute top-4 md:top-6 right-4 md:right-6 px-3 md:px-4 py-1.5 md:py-2 bg-[#FFD800] text-[#0A0A0A] text-xs md:text-sm font-black uppercase tracking-wider">
 									Top Shipper
 								</div>
 							</div>
@@ -104,27 +106,29 @@ export function Leaderboard() {
 									return (
 										<div
 											key={member.name}
-											className="relative overflow-hidden p-6 bg-[#171717] border border-[#262626] hover:border-[#333] transition-colors"
+											className="relative overflow-hidden p-4 md:p-6 bg-[#171717] border border-[#262626] hover:border-[#333] transition-colors"
 										>
-											<div className="flex items-center gap-4">
-												<div className="text-4xl">{medal}</div>
+											<div className="flex items-center gap-3 md:gap-4">
+												<div className="text-3xl md:text-4xl flex-shrink-0">{medal}</div>
 												{member.avatarUrl ? (
 													<img
 														src={member.avatarUrl}
 														alt={member.name}
-														className="w-16 h-16 rounded-full ring-2 ring-[#262626]"
+														className="w-14 h-14 md:w-16 md:h-16 rounded-full ring-2 ring-[#262626] flex-shrink-0"
 													/>
 												) : (
-													<div className="w-16 h-16 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-xl rounded-full">
+													<div className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-lg md:text-xl rounded-full flex-shrink-0">
 														{member.name[0]?.toUpperCase() || "?"}
 													</div>
 												)}
-												<div className="flex-1">
-													<div className="text-xl font-black text-white mb-1">{member.name}</div>
-													<div className="flex items-center gap-3 text-sm">
+												<div className="flex-1 min-w-0">
+													<div className="text-lg md:text-xl font-black text-white mb-1 truncate">{member.name}</div>
+													<div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs md:text-sm">
 														<span className="font-bold text-white">{member.commits} commits</span>
-														<span className="text-[#FFD800] font-mono">+{formatNumber(member.additions)}</span>
-														<span className="text-red-500 font-mono">-{formatNumber(member.deletions)}</span>
+														<div className="flex items-center gap-2 md:gap-3">
+															<span className="text-green-500 font-mono">+{formatNumber(member.additions)}</span>
+															<span className="text-red-500 font-mono">-{formatNumber(member.deletions)}</span>
+														</div>
 													</div>
 												</div>
 											</div>
@@ -141,26 +145,26 @@ export function Leaderboard() {
 									return (
 										<div
 											key={member.name}
-											className="flex items-center gap-4 p-4 bg-[#171717] border border-[#262626] hover:border-[#333] transition-colors"
+											className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-[#171717] border border-[#262626] hover:border-[#333] transition-colors"
 										>
-											<div className="w-10 h-10 flex items-center justify-center bg-[#262626] text-[#737373] font-bold">
+											<div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center bg-[#262626] text-[#737373] font-bold text-sm md:text-base flex-shrink-0">
 												{position}
 											</div>
 											{member.avatarUrl ? (
 												<img
 													src={member.avatarUrl}
 													alt={member.name}
-													className="w-12 h-12 rounded-full ring-2 ring-[#262626]"
+													className="w-10 h-10 md:w-12 md:h-12 rounded-full ring-2 ring-[#262626] flex-shrink-0"
 												/>
 											) : (
-												<div className="w-12 h-12 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold rounded-full">
+												<div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-sm md:text-base rounded-full flex-shrink-0">
 													{member.name[0]?.toUpperCase() || "?"}
 												</div>
 											)}
-											<div className="flex-1">
-												<div className="font-bold text-white">{member.name}</div>
-												<div className="text-sm text-[#737373]">
-													{member.commits} commits • <span className="text-[#FFD800]">+{formatNumber(member.additions)}</span> <span className="text-red-500">-{formatNumber(member.deletions)}</span>
+											<div className="flex-1 min-w-0">
+												<div className="font-bold text-white text-sm md:text-base truncate">{member.name}</div>
+												<div className="text-xs md:text-sm text-[#737373]">
+													{member.commits} commits • <span className="text-green-500">+{formatNumber(member.additions)}</span> <span className="text-red-500">-{formatNumber(member.deletions)}</span>
 												</div>
 											</div>
 										</div>
