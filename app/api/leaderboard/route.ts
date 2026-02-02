@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits } from "@/lib/db/schema";
 import { sql, gte, desc } from "drizzle-orm";
+import { getPeruWeekStart } from "@/lib/utils/time";
 
 export async function GET() {
 	try {
-		const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+		const weekStart = getPeruWeekStart();
 
 		const leaderboard = await db
 			.select({
@@ -16,7 +17,7 @@ export async function GET() {
 				deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
 			})
 			.from(commits)
-			.where(gte(commits.pushedAt, weekAgo))
+			.where(gte(commits.pushedAt, weekStart))
 			.groupBy(commits.authorUsername, commits.authorAvatarUrl)
 			.orderBy(desc(sql`count(*)`))
 			.limit(10);

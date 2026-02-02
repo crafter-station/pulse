@@ -32,3 +32,16 @@ export const contributors = pgTable("contributors", {
 	createdAt: timestamp("created_at").defaultNow(),
 	updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const weeklyLeaderboards = pgTable("weekly_leaderboards", {
+	id: serial("id").primaryKey(),
+	year: integer("year").notNull(),
+	week: integer("week").notNull(), // ISO week number
+	username: text("username").notNull(),
+	avatarUrl: text("avatar_url"),
+	commits: integer("commits").notNull(),
+	additions: integer("additions").default(0),
+	deletions: integer("deletions").default(0),
+	rank: integer("rank").notNull(),
+	createdAt: timestamp("created_at").defaultNow(),
+});

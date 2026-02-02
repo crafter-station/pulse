@@ -2,13 +2,20 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits, repos } from "@/lib/db/schema";
 import { sql, and, gte, desc } from "drizzle-orm";
+import {
+	getPeruNow,
+	getPeruTodayStart,
+	getPeruWeekStart,
+	getPeruISOWeek,
+} from "@/lib/utils/time";
 
 export async function GET() {
 	try {
-		const now = new Date();
-		const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-		const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+		const now = getPeruNow();
+		const todayStart = getPeruTodayStart();
+		const weekStart = getPeruWeekStart();
 		const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+		const { year, week } = getPeruISOWeek();
 
 		const [commitsToday] = await db
 			.select({ count: sql<number>`count(*)::int` })
@@ -18,7 +25,7 @@ export async function GET() {
 		const [activeRepos] = await db
 			.select({ count: sql<number>`count(distinct ${repos.name})::int` })
 			.from(repos)
-			.where(and(gte(repos.lastPushAt, weekAgo)));
+			.where(and(gte(repos.lastPushAt, weekStart)));
 
 		const [totalCommits] = await db
 			.select({ count: sql<number>`count(*)::int` })
@@ -31,7 +38,7 @@ export async function GET() {
 				deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
 			})
 			.from(commits)
-			.where(gte(commits.pushedAt, weekAgo));
+			.where(gte(commits.pushedAt, weekStart));
 
 		const [monthStats] = await db
 			.select({
@@ -45,7 +52,7 @@ export async function GET() {
 		const [activeContributors] = await db
 			.select({ count: sql<number>`count(distinct ${commits.authorUsername})::int` })
 			.from(commits)
-			.where(gte(commits.pushedAt, weekAgo));
+			.where(gte(commits.pushedAt, weekStart));
 
 		const allCommits = await db
 			.select({
@@ -73,6 +80,10 @@ export async function GET() {
 			activeRepos: activeRepos.count || 0,
 			teamStreak: streak,
 			totalCommits: totalCommits.count || 0,
+			currentWeek: {
+				year,
+				week,
+			},
 			weekStats: {
 				commits: weekStats.commits || 0,
 				additions: weekStats.additions || 0,
