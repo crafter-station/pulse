@@ -12,15 +12,24 @@ export async function GET() {
 			.orderBy(desc(commits.pushedAt))
 			.limit(50);
 
-		const formatted = recentCommits.map((commit) => ({
-			repo: commit.repoName,
-			author: commit.authorUsername,
-			message: commit.message,
-			time: formatRelativeTime(commit.pushedAt),
-			additions: commit.additions || 0,
-			deletions: commit.deletions || 0,
-			commitUrl: commit.commitUrl,
-		}));
+		const formatted = recentCommits.map((commit) => {
+			// Remove Co-Authored-By lines from commit messages
+			const cleanMessage = commit.message
+				.split("\n")
+				.filter((line) => !line.includes("Co-Authored-By:"))
+				.join("\n")
+				.trim();
+
+			return {
+				repo: commit.repoName,
+				author: commit.authorUsername,
+				message: cleanMessage,
+				time: formatRelativeTime(commit.pushedAt),
+				additions: commit.additions || 0,
+				deletions: commit.deletions || 0,
+				commitUrl: commit.commitUrl,
+			};
+		});
 
 		return NextResponse.json(formatted);
 	} catch (error) {
