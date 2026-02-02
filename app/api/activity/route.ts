@@ -23,6 +23,7 @@ export async function GET() {
 			return {
 				repo: commit.repoName,
 				author: commit.authorUsername,
+				avatarUrl: commit.authorAvatarUrl,
 				message: cleanMessage,
 				time: formatRelativeTime(commit.pushedAt),
 				additions: commit.additions || 0,

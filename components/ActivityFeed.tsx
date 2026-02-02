@@ -6,6 +6,7 @@ import { formatNumber } from "@/lib/utils/format";
 interface Activity {
 	repo: string;
 	author: string;
+	avatarUrl: string | null;
 	message: string;
 	time: string;
 	additions: number;
@@ -82,9 +83,17 @@ export function ActivityFeed() {
 								key={i}
 								className="flex items-center gap-4 p-4 bg-[#171717] border border-[#262626] hover:border-[#333] transition-colors"
 							>
-								<div className="w-10 h-10 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-sm">
-									{item.author[0]?.toUpperCase() || "?"}
-								</div>
+								{item.avatarUrl ? (
+									<img
+										src={item.avatarUrl}
+										alt={item.author}
+										className="w-10 h-10 rounded-full"
+									/>
+								) : (
+									<div className="w-10 h-10 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-sm rounded-full">
+										{item.author[0]?.toUpperCase() || "?"}
+									</div>
+								)}
 								<div className="flex-1 min-w-0">
 									<div className="flex items-center gap-2 mb-1">
 										<span className="font-semibold text-white">{item.author}</span>

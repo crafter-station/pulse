@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { db } from "../lib/db";
 import { commits } from "../lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const ORG_NAME = "crafter-station";
@@ -15,13 +15,14 @@ const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
 async function updateAvatars() {
 	try {
-		console.log("Fetching all commits...");
+		console.log("Fetching recent commits...");
 
-		const allCommits = await db.select().from(commits).limit(500);
+		const allCommits = await db.select().from(commits).orderBy(desc(commits.pushedAt)).limit(200);
 
-		console.log(`Found ${allCommits.length} commits to check\n`);
+		console.log(`Found ${allCommits.length} commits to update\n`);
 
 		let updated = 0;
+		let failed = 0;
 
 		for (const commit of allCommits) {
 			try {
@@ -31,25 +32,27 @@ async function updateAvatars() {
 					ref: commit.id,
 				});
 
-				const realAvatarUrl = commitDetails.author?.avatar_url;
+				const realAvatarUrl = commitDetails.author?.avatar_url || `https://github.com/${commit.authorUsername}.png`;
 
-				if (realAvatarUrl && realAvatarUrl !== commit.authorAvatarUrl) {
-					await db
-						.update(commits)
-						.set({ authorAvatarUrl: realAvatarUrl })
-						.where(eq(commits.id, commit.id));
+				// Always update to ensure we have the real avatar
+				await db
+					.update(commits)
+					.set({ authorAvatarUrl: realAvatarUrl })
+					.where(eq(commits.id, commit.id));
 
-					console.log(`  Updated avatar for ${commit.authorUsername} in ${commit.repoName}/${commit.id.substring(0, 7)}`);
-					updated++;
-				}
+				console.log(`  ✓ ${commit.authorUsername} (${commit.repoName}/${commit.id.substring(0, 7)})`);
+				updated++;
 			} catch (error: any) {
-				if (error.status !== 404) {
-					console.error(`  Error updating ${commit.id}:`, error.message);
+				if (error.status === 404) {
+					failed++;
+				} else {
+					console.error(`  ✗ Error on ${commit.id}:`, error.message);
 				}
 			}
 		}
 
-		console.log(`\nUpdated ${updated} avatars!`);
+		console.log(`\n✓ Updated ${updated} avatars`);
+		if (failed > 0) console.log(`✗ Failed ${failed} (repo not found)`);
 	} catch (error) {
 		console.error("Update error:", error);
 		process.exit(1);
