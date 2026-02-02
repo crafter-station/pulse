@@ -55,7 +55,7 @@ async function backfillCommits() {
 					if (!commit.sha || !commit.commit.message) continue;
 
 					const authorUsername = commit.author?.login || commit.commit.author?.name || "unknown";
-					const authorAvatarUrl = commit.author?.avatar_url || null;
+					const authorAvatarUrl = commit.author?.avatar_url || `https://github.com/${commit.author?.login || 'ghost'}.png`;
 
 					const commitData = {
 						id: commit.sha,

@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
 		for (const commit of payload.commits) {
 			let additions = 0;
 			let deletions = 0;
+			let authorAvatarUrl = pusherAvatar;
 
 			try {
 				const { data: commitDetails } = await octokit.repos.getCommit({
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
 				});
 				additions = commitDetails.stats?.additions || 0;
 				deletions = commitDetails.stats?.deletions || 0;
+				authorAvatarUrl = commitDetails.author?.avatar_url || pusherAvatar;
 			} catch (error) {
 				console.error(`Failed to fetch stats for commit ${commit.id}:`, error);
 			}
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
 				id: commit.id,
 				repoName,
 				authorUsername: commit.author.username || pusher,
-				authorAvatarUrl: pusherAvatar,
+				authorAvatarUrl,
 				message: commit.message,
 				additions,
 				deletions,
