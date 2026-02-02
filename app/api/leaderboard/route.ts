@@ -12,6 +12,8 @@ export async function GET() {
 				username: commits.authorUsername,
 				avatarUrl: commits.authorAvatarUrl,
 				commits: sql<number>`count(*)::int`,
+				additions: sql<number>`coalesce(sum(${commits.additions}), 0)::int`,
+				deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
 			})
 			.from(commits)
 			.where(gte(commits.pushedAt, weekAgo))
@@ -22,6 +24,8 @@ export async function GET() {
 		const formatted = leaderboard.map((member) => ({
 			name: member.username,
 			commits: member.commits,
+			additions: member.additions,
+			deletions: member.deletions,
 			avatarUrl: member.avatarUrl,
 		}));
 

@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatNumber } from "@/lib/utils/format";
 
 interface LeaderboardMember {
 	name: string;
 	commits: number;
+	additions: number;
+	deletions: number;
 	avatarUrl?: string;
 }
 
@@ -79,7 +82,9 @@ export function Leaderboard() {
 								)}
 								<div className="flex-1">
 									<div className="font-semibold text-white">{member.name}</div>
-									<div className="text-sm text-[#737373]">{member.commits} commits this week</div>
+									<div className="text-sm text-[#737373]">
+										{member.commits} commits • <span className="text-green-500">+{formatNumber(member.additions)}</span> <span className="text-red-500">-{formatNumber(member.deletions)}</span>
+									</div>
 								</div>
 								{i === 0 && (
 									<span className="px-3 py-1 text-xs font-semibold bg-[#FFD800] text-[#0A0A0A]">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatNumber } from "@/lib/utils/format";
 
 interface Activity {
 	repo: string;
@@ -95,8 +96,8 @@ export function ActivityFeed() {
 									<p className="text-sm text-[#A3A3A3] font-mono truncate">{item.message}</p>
 								</div>
 								<div className="flex items-center gap-4 text-xs">
-									<span className="text-green-500">+{item.additions}</span>
-									<span className="text-red-500">-{item.deletions}</span>
+									<span className="text-green-500">+{formatNumber(item.additions)}</span>
+									<span className="text-red-500">-{formatNumber(item.deletions)}</span>
 									<span className="text-[#737373]">{item.time}</span>
 								</div>
 							</div>

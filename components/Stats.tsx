@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatNumber } from "@/lib/utils/format";
 
 interface StatsData {
 	commitsToday: number;
@@ -37,9 +38,9 @@ export function Stats() {
 	}, []);
 
 	const statItems = [
-		{ label: "Commits today", value: stats.commitsToday.toString() },
-		{ label: "Active repos", value: stats.activeRepos.toString() },
-		{ label: "Team streak", value: `${stats.teamStreak} days` },
+		{ label: "Commits today", value: formatNumber(stats.commitsToday) },
+		{ label: "Active repos", value: formatNumber(stats.activeRepos) },
+		{ label: "Team streak", value: `${formatNumber(stats.teamStreak)} days` },
 	];
 
 	return (
