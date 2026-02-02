@@ -8,6 +8,7 @@ export async function GET() {
 		const now = new Date();
 		const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 		const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+		const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
 		const [commitsToday] = await db
 			.select({ count: sql<number>`count(*)::int` })
@@ -18,6 +19,33 @@ export async function GET() {
 			.select({ count: sql<number>`count(distinct ${repos.name})::int` })
 			.from(repos)
 			.where(and(gte(repos.lastPushAt, weekAgo)));
+
+		const [totalCommits] = await db
+			.select({ count: sql<number>`count(*)::int` })
+			.from(commits);
+
+		const [weekStats] = await db
+			.select({
+				commits: sql<number>`count(*)::int`,
+				additions: sql<number>`coalesce(sum(${commits.additions}), 0)::int`,
+				deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
+			})
+			.from(commits)
+			.where(gte(commits.pushedAt, weekAgo));
+
+		const [monthStats] = await db
+			.select({
+				commits: sql<number>`count(*)::int`,
+				additions: sql<number>`coalesce(sum(${commits.additions}), 0)::int`,
+				deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
+			})
+			.from(commits)
+			.where(gte(commits.pushedAt, monthAgo));
+
+		const [activeContributors] = await db
+			.select({ count: sql<number>`count(distinct ${commits.authorUsername})::int` })
+			.from(commits)
+			.where(gte(commits.pushedAt, weekAgo));
 
 		const allCommits = await db
 			.select({
@@ -44,6 +72,18 @@ export async function GET() {
 			commitsToday: commitsToday.count || 0,
 			activeRepos: activeRepos.count || 0,
 			teamStreak: streak,
+			totalCommits: totalCommits.count || 0,
+			weekStats: {
+				commits: weekStats.commits || 0,
+				additions: weekStats.additions || 0,
+				deletions: weekStats.deletions || 0,
+			},
+			monthStats: {
+				commits: monthStats.commits || 0,
+				additions: monthStats.additions || 0,
+				deletions: monthStats.deletions || 0,
+			},
+			activeContributors: activeContributors.count || 0,
 		});
 	} catch (error) {
 		console.error("Stats API error:", error);

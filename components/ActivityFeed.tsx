@@ -43,18 +43,21 @@ export function ActivityFeed() {
 
 	if (loading) {
 		return (
-			<section id="activity" className="py-20 px-6">
-				<div className="mx-auto max-w-6xl">
+			<section id="activity" className="py-20 px-6 bg-[#0A0A0A]">
+				<div className="mx-auto max-w-7xl">
 					<div className="flex items-center justify-between mb-8">
-						<h2 className="text-2xl font-bold text-white">Recent Activity</h2>
-						<div className="flex items-center gap-2 text-sm text-[#737373]">
-							<span className="w-2 h-2 bg-gray-500 rounded-full" />
-							Loading...
+						<div>
+							<h2 className="text-3xl font-black text-white mb-2">Recent Activity</h2>
+							<p className="text-[#737373]">Live feed of all commits to main</p>
+						</div>
+						<div className="flex items-center gap-2 px-4 py-2 bg-[#171717] border border-[#262626]">
+							<span className="w-2 h-2 bg-gray-500 rounded-full animate-pulse" />
+							<span className="text-sm text-[#737373]">Loading...</span>
 						</div>
 					</div>
-					<div className="space-y-3">
-						{[...Array(5)].map((_, i) => (
-							<div key={i} className="h-20 bg-[#171717] border border-[#262626] animate-pulse" />
+					<div className="space-y-2">
+						{[...Array(8)].map((_, i) => (
+							<div key={i} className="h-24 bg-[#171717]/50 border border-[#262626] animate-pulse" />
 						))}
 					</div>
 				</div>
@@ -63,53 +66,72 @@ export function ActivityFeed() {
 	}
 
 	return (
-		<section id="activity" className="py-20 px-6">
-			<div className="mx-auto max-w-6xl">
+		<section id="activity" className="py-20 px-6 bg-[#0A0A0A]">
+			<div className="mx-auto max-w-7xl">
 				<div className="flex items-center justify-between mb-8">
-					<h2 className="text-2xl font-bold text-white">Recent Activity</h2>
-					<div className="flex items-center gap-2 text-sm text-[#737373]">
+					<div>
+						<h2 className="text-3xl font-black text-white mb-2">Recent Activity</h2>
+						<p className="text-[#737373]">Live feed of all commits to main</p>
+					</div>
+					<div className="flex items-center gap-2 px-4 py-2 bg-[#171717] border border-[#262626]">
 						<span className={`w-2 h-2 rounded-full ${error ? "bg-red-500" : "bg-green-500 animate-pulse"}`} />
-						{error ? "Error" : "Live"}
+						<span className="text-sm text-[#737373]">{error ? "Error" : "Live"}</span>
 					</div>
 				</div>
 				{activity.length === 0 ? (
-					<div className="text-center py-12 text-[#737373]">
-						No activity yet. Push to main to see it here!
+					<div className="text-center py-20 border border-[#262626] bg-[#171717]/30">
+						<div className="text-6xl mb-4">🚀</div>
+						<div className="text-xl text-white font-bold mb-2">No activity yet</div>
+						<div className="text-[#737373]">Push to main to see it here!</div>
 					</div>
 				) : (
-					<div className="space-y-3">
+					<div className="space-y-2">
 						{activity.map((item, i) => (
-							<div
+							<a
 								key={i}
-								className="flex items-center gap-4 p-4 bg-[#171717] border border-[#262626] hover:border-[#333] transition-colors"
+								href={item.commitUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="group flex items-start gap-4 p-5 bg-[#171717] border border-[#262626] hover:border-[#FFD800]/30 hover:bg-[#171717] transition-all"
 							>
-								{item.avatarUrl ? (
-									<img
-										src={item.avatarUrl}
-										alt={item.author}
-										className="w-10 h-10 rounded-full"
-									/>
-								) : (
-									<div className="w-10 h-10 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-sm rounded-full">
-										{item.author[0]?.toUpperCase() || "?"}
-									</div>
-								)}
+								<div className="flex-shrink-0 pt-1">
+									{item.avatarUrl ? (
+										<img
+											src={item.avatarUrl}
+											alt={item.author}
+											className="w-12 h-12 rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all"
+										/>
+									) : (
+										<div className="w-12 h-12 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-lg rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all">
+											{item.author[0]?.toUpperCase() || "?"}
+										</div>
+									)}
+								</div>
 								<div className="flex-1 min-w-0">
-									<div className="flex items-center gap-2 mb-1">
-										<span className="font-semibold text-white">{item.author}</span>
+									<div className="flex items-center gap-2 mb-2 flex-wrap">
+										<span className="font-bold text-white">{item.author}</span>
 										<span className="text-[#737373]">pushed to</span>
-										<span className="px-2 py-0.5 text-xs font-medium bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20">
+										<span className="px-2 py-1 text-xs font-bold bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20 font-mono">
 											{item.repo}
 										</span>
+										<span className="text-[#737373] text-sm ml-auto">{item.time}</span>
 									</div>
-									<p className="text-sm text-[#A3A3A3] font-mono truncate">{item.message}</p>
+									<p className="text-[#A3A3A3] font-mono text-sm mb-3 line-clamp-2">
+										{item.message}
+									</p>
+									<div className="flex items-center gap-4">
+										<div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20">
+											<span className="text-xs font-bold text-green-500">+{formatNumber(item.additions)}</span>
+										</div>
+										<div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20">
+											<span className="text-xs font-bold text-red-500">-{formatNumber(item.deletions)}</span>
+										</div>
+										<div className="ml-auto text-xs text-[#737373] group-hover:text-[#FFD800] transition-colors">
+											View commit →
+										</div>
+									</div>
 								</div>
-								<div className="flex items-center gap-4 text-xs">
-									<span className="text-green-500">+{formatNumber(item.additions)}</span>
-									<span className="text-red-500">-{formatNumber(item.deletions)}</span>
-									<span className="text-[#737373]">{item.time}</span>
-								</div>
-							</div>
+							</a>
 						))}
 					</div>
 				)}
