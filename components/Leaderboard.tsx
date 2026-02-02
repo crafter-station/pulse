@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { formatNumber } from "@/lib/utils/format";
+import { useEffect, useState } from "react";
 
 interface LeaderboardMember {
 	name: string;
 	commits: number;
 	additions: number;
 	deletions: number;
-	avatarUrl?: string;
+	avatarUrl?: string;	
 }
 
 export function Leaderboard() {
@@ -61,7 +61,7 @@ export function Leaderboard() {
 	};
 
 	return (
-		<section id="leaderboard" className="py-12 md:py-20 px-4 md:px-6 bg-[#171717]/20">
+		<section id="leaderboard" className="py-12 md:py-20 px-4 md:px-6 bg-[#171717]/20 scroll-mt-8">
 			<div className="mx-auto max-w-7xl">
 				<div className="mb-6 md:mb-8">
 					<h2 className="text-2xl md:text-3xl font-black text-white mb-2">Weekly Leaderboard</h2>
