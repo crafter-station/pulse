@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { commits } from "@/lib/db/schema";
+import { commits } from "@/lib/db/schema"; // analytics endpoint
 import { sql, gte, and, lt } from "drizzle-orm";
 import { getPeruWeekStart, PERU_UTC_OFFSET } from "@/lib/utils/time";
 
