@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { formatNumber } from "@/lib/utils/format";
 
 interface Activity {
@@ -12,42 +12,80 @@ interface Activity {
 	additions: number;
 	deletions: number;
 	commitUrl: string;
+	isPrivate: boolean;
 }
 
 type ViewMode = "compact" | "detailed";
+
+const LockIcon = () => (
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-2.5 h-2.5">
+		<path fillRule="evenodd" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V7H3a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-1.5V4.5A3.5 3.5 0 0 0 8 1Zm2 6V4.5a2 2 0 1 0-4 0V7h4Z" clipRule="evenodd" />
+	</svg>
+);
+
+const PrivateBadge = () => (
+	<span className="px-1.5 py-0.5 text-[10px] font-bold bg-[#737373]/10 text-[#737373] border border-[#737373]/20 flex items-center gap-1">
+		<LockIcon />
+		Private
+	</span>
+);
+
+const PAGE_SIZE = 20;
 
 export function ActivityFeed() {
 	const [activity, setActivity] = useState<Activity[]>([]);
 	const [filteredActivity, setFilteredActivity] = useState<Activity[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [loadingMore, setLoadingMore] = useState(false);
+	const [hasMore, setHasMore] = useState(false);
 	const [error, setError] = useState(false);
 	const [viewMode, setViewMode] = useState<ViewMode>("compact");
 	const [selectedRepo, setSelectedRepo] = useState<string>("all");
 	const [selectedAuthor, setSelectedAuthor] = useState<string>("all");
 	const [searchQuery, setSearchQuery] = useState("");
+	const sentinelRef = useRef<HTMLDivElement>(null);
+
+	const fetchActivity = useCallback(async (offset = 0, append = false) => {
+		try {
+			if (append) setLoadingMore(true);
+			const res = await fetch(`/api/activity?offset=${offset}&limit=${PAGE_SIZE}`);
+			if (!res.ok) throw new Error("Failed to fetch");
+			const data = await res.json();
+			setActivity((prev) => append ? [...prev, ...data.items] : data.items);
+			setHasMore(data.hasMore);
+			setError(false);
+		} catch (err) {
+			console.error("Error fetching activity:", err);
+			if (!append) setError(true);
+		} finally {
+			setLoading(false);
+			setLoadingMore(false);
+		}
+	}, []);
 
 	useEffect(() => {
-		const fetchActivity = async () => {
-			try {
-				const res = await fetch("/api/activity");
-				if (!res.ok) throw new Error("Failed to fetch");
-				const data = await res.json();
-				setActivity(data);
-				setFilteredActivity(data);
-				setError(false);
-			} catch (err) {
-				console.error("Error fetching activity:", err);
-				setError(true);
-			} finally {
-				setLoading(false);
-			}
-		};
-
 		fetchActivity();
-
-		const interval = setInterval(fetchActivity, 30000);
+		const interval = setInterval(() => fetchActivity(), 30000);
 		return () => clearInterval(interval);
-	}, []);
+	}, [fetchActivity]);
+
+	// Infinite scroll via IntersectionObserver
+	useEffect(() => {
+		const sentinel = sentinelRef.current;
+		if (!sentinel) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && hasMore && !loadingMore) {
+					fetchActivity(activity.length, true);
+				}
+			},
+			{ rootMargin: "200px" },
+		);
+
+		observer.observe(sentinel);
+		return () => observer.disconnect();
+	}, [hasMore, loadingMore, activity.length, fetchActivity]);
 
 	useEffect(() => {
 		let filtered = activity;
@@ -61,8 +99,10 @@ export function ActivityFeed() {
 		}
 
 		if (searchQuery) {
-			filtered = filtered.filter((item) =>
-				item.message.toLowerCase().includes(searchQuery.toLowerCase())
+			filtered = filtered.filter(
+				(item) =>
+					!item.isPrivate &&
+					item.message.toLowerCase().includes(searchQuery.toLowerCase())
 			);
 		}
 
@@ -180,6 +220,7 @@ export function ActivityFeed() {
 					)}
 				</div>
 
+				<div className="max-h-[600px] overflow-y-auto scrollbar-thin">
 				{filteredActivity.length === 0 ? (
 					<div className="text-center py-20 border border-[#262626] bg-[#171717]/30">
 						<div className="text-6xl mb-4">🔍</div>
@@ -188,93 +229,140 @@ export function ActivityFeed() {
 					</div>
 				) : viewMode === "compact" ? (
 					<div className="space-y-1">
-						{filteredActivity.map((item, i) => (
-							<a
-								key={i}
-								href={item.commitUrl}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="group flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 bg-[#171717] border border-[#262626] hover:border-[#FFD800]/30 transition-all"
-							>
-								{item.avatarUrl ? (
-									<img
-										src={item.avatarUrl}
-										alt={item.author}
-										className="w-7 h-7 md:w-8 md:h-8 rounded-full ring-1 ring-[#262626] flex-shrink-0"
-									/>
-								) : (
-									<div className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-xs rounded-full flex-shrink-0">
-										{item.author[0]?.toUpperCase() || "?"}
-									</div>
-								)}
-								<div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-									<div className="flex items-center gap-2 flex-shrink-0">
-										<span className="font-bold text-white text-xs md:text-sm">{item.author}</span>
-										<span className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs font-bold bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20 font-mono">
-											{item.repo}
-										</span>
-									</div>
-									<span className="text-[#A3A3A3] text-xs md:text-sm font-mono truncate">{item.message}</span>
-								</div>
-								<div className="hidden sm:flex items-center gap-1.5 md:gap-2 text-xs flex-shrink-0">
-									<span className="text-green-500 font-mono text-[10px] md:text-xs">+{formatNumber(item.additions)}</span>
-									<span className="text-red-500 font-mono text-[10px] md:text-xs">-{formatNumber(item.deletions)}</span>
-									<span className="text-[#737373] ml-1 md:ml-2 text-[10px] md:text-xs">{item.time}</span>
-								</div>
-							</a>
-						))}
-					</div>
-				) : (
-					<div className="space-y-2">
-						{filteredActivity.map((item, i) => (
-							<a
-								key={i}
-								href={item.commitUrl}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="group flex items-start gap-3 md:gap-4 p-4 md:p-5 bg-[#171717] border border-[#262626] hover:border-[#FFD800]/30 hover:bg-[#171717] transition-all"
-							>
-								<div className="flex-shrink-0 pt-0.5 md:pt-1">
+						{filteredActivity.map((item, i) => {
+							const content = (
+								<>
 									{item.avatarUrl ? (
 										<img
 											src={item.avatarUrl}
 											alt={item.author}
-											className="w-10 h-10 md:w-12 md:h-12 rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all"
+											className="w-7 h-7 md:w-8 md:h-8 rounded-full ring-1 ring-[#262626] flex-shrink-0"
 										/>
 									) : (
-										<div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-base md:text-lg rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all">
+										<div className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-xs rounded-full flex-shrink-0">
 											{item.author[0]?.toUpperCase() || "?"}
 										</div>
 									)}
-								</div>
-								<div className="flex-1 min-w-0">
-									<div className="flex items-center gap-2 mb-2 flex-wrap">
-										<span className="font-bold text-white text-sm md:text-base">{item.author}</span>
-										<span className="text-[#737373] text-xs md:text-sm">pushed to</span>
-										<span className="px-2 py-1 text-[10px] md:text-xs font-bold bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20 font-mono">
-											{item.repo}
+									<div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+										<div className="flex items-center gap-2 flex-shrink-0">
+											<span className="font-bold text-white text-xs md:text-sm">{item.author}</span>
+											<span className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs font-bold bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20 font-mono">
+												{item.repo}
+											</span>
+											{item.isPrivate && <PrivateBadge />}
+										</div>
+										<span className={`text-[#A3A3A3] text-xs md:text-sm font-mono truncate ${item.isPrivate ? "blur-sm select-none" : ""}`}>
+											{item.message}
 										</span>
-										<span className="text-[#737373] text-xs md:text-sm ml-auto">{item.time}</span>
 									</div>
-									<p className="text-[#A3A3A3] font-mono text-xs md:text-sm mb-3 line-clamp-2">
-										{item.message}
-									</p>
-									<div className="flex items-center gap-2 md:gap-4 flex-wrap">
-										<div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 bg-green-500/10 border border-green-500/20">
-											<span className="text-[10px] md:text-xs font-bold text-green-500">+{formatNumber(item.additions)}</span>
-										</div>
-										<div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 bg-red-500/10 border border-red-500/20">
-											<span className="text-[10px] md:text-xs font-bold text-red-500">-{formatNumber(item.deletions)}</span>
-										</div>
-										<div className="ml-auto text-[10px] md:text-xs text-[#737373] group-hover:text-[#FFD800] transition-colors">
-											View commit →
-										</div>
+									<div className="hidden sm:flex items-center gap-1.5 md:gap-2 text-xs flex-shrink-0">
+										<span className="text-green-500 font-mono text-[10px] md:text-xs">+{formatNumber(item.additions)}</span>
+										<span className="text-red-500 font-mono text-[10px] md:text-xs">-{formatNumber(item.deletions)}</span>
+										<span className="text-[#737373] ml-1 md:ml-2 text-[10px] md:text-xs">{item.time}</span>
 									</div>
+								</>
+							);
+
+							const className = `group flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 bg-[#171717] border border-[#262626] transition-all ${
+								item.isPrivate ? "cursor-default" : "hover:border-[#FFD800]/30"
+							}`;
+
+							return item.isPrivate ? (
+								<div key={i} className={className}>
+									{content}
 								</div>
-							</a>
-						))}
+							) : (
+								<a
+									key={i}
+									href={item.commitUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									className={className}
+								>
+									{content}
+								</a>
+							);
+						})}
+					</div>
+				) : (
+					<div className="space-y-2">
+						{filteredActivity.map((item, i) => {
+							const content = (
+								<>
+									<div className="flex-shrink-0 pt-0.5 md:pt-1">
+										{item.avatarUrl ? (
+											<img
+												src={item.avatarUrl}
+												alt={item.author}
+												className="w-10 h-10 md:w-12 md:h-12 rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all"
+											/>
+										) : (
+											<div className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-[#262626] text-[#FFD800] font-bold text-base md:text-lg rounded-full ring-2 ring-[#262626] group-hover:ring-[#FFD800]/30 transition-all">
+												{item.author[0]?.toUpperCase() || "?"}
+											</div>
+										)}
+									</div>
+									<div className="flex-1 min-w-0">
+										<div className="flex items-center gap-2 mb-2 flex-wrap">
+											<span className="font-bold text-white text-sm md:text-base">{item.author}</span>
+											<span className="text-[#737373] text-xs md:text-sm">pushed to</span>
+											<span className="px-2 py-1 text-[10px] md:text-xs font-bold bg-[#FFD800]/10 text-[#FFD800] border border-[#FFD800]/20 font-mono">
+												{item.repo}
+											</span>
+											{item.isPrivate && <PrivateBadge />}
+											<span className="text-[#737373] text-xs md:text-sm ml-auto">{item.time}</span>
+										</div>
+										<p className={`text-[#A3A3A3] font-mono text-xs md:text-sm mb-3 line-clamp-2 ${item.isPrivate ? "blur-sm select-none" : ""}`}>
+											{item.message}
+										</p>
+										<div className="flex items-center gap-2 md:gap-4 flex-wrap">
+											<div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 bg-green-500/10 border border-green-500/20">
+												<span className="text-[10px] md:text-xs font-bold text-green-500">+{formatNumber(item.additions)}</span>
+											</div>
+											<div className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 bg-red-500/10 border border-red-500/20">
+												<span className="text-[10px] md:text-xs font-bold text-red-500">-{formatNumber(item.deletions)}</span>
+											</div>
+											{!item.isPrivate && (
+												<div className="ml-auto text-[10px] md:text-xs text-[#737373] group-hover:text-[#FFD800] transition-colors">
+													View commit →
+												</div>
+											)}
+										</div>
+									</div>
+								</>
+							);
+
+							const className = `group flex items-start gap-3 md:gap-4 p-4 md:p-5 bg-[#171717] border border-[#262626] transition-all ${
+								item.isPrivate ? "cursor-default" : "hover:border-[#FFD800]/30 hover:bg-[#171717]"
+							}`;
+
+							return item.isPrivate ? (
+								<div key={i} className={className}>
+									{content}
+								</div>
+							) : (
+								<a
+									key={i}
+									href={item.commitUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									className={className}
+								>
+									{content}
+								</a>
+							);
+						})}
 					</div>
 				)}
+				{/* Infinite scroll sentinel */}
+				<div ref={sentinelRef} className="h-1" />
+				{loadingMore && (
+					<div className="flex items-center justify-center py-4 gap-2">
+						<span className="w-2 h-2 bg-[#FFD800] rounded-full animate-pulse" />
+						<span className="text-xs text-[#737373]">Loading more...</span>
+					</div>
+				)}
+			</div>
 			</div>
 		</section>
 	);
