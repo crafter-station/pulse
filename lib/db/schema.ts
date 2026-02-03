@@ -18,6 +18,7 @@ export const repos = pgTable("repos", {
 	name: text("name").notNull().unique(),
 	fullName: text("full_name").notNull(),
 	isActive: boolean("is_active").default(true),
+	isPrivate: boolean("is_private").default(false),
 	lastPushAt: timestamp("last_push_at"),
 	createdAt: timestamp("created_at").defaultNow(),
 	updatedAt: timestamp("updated_at").defaultNow(),
