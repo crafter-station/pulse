@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { Stats } from "@/components/Stats";
+import { Analytics } from "@/components/Analytics";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { Leaderboard } from "@/components/Leaderboard";
 import { Footer } from "@/components/Footer";
@@ -12,6 +13,7 @@ export default function Home() {
 			<main>
 				<Hero />
 				<Stats />
+				<Analytics />
 				<ActivityFeed />
 				<Leaderboard />
 			</main>

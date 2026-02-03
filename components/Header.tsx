@@ -24,6 +24,12 @@ export function Header() {
 						Activity
 					</a>
 					<a
+						href="#analytics"
+						className="text-xs md:text-sm text-[#A3A3A3] hover:text-white transition-colors"
+					>
+						Analytics
+					</a>
+					<a
 						href="#leaderboard"
 						className="text-xs md:text-sm text-[#A3A3A3] hover:text-white transition-colors"
 					>
