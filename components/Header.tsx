@@ -18,6 +18,12 @@ export function Header() {
 				</div>
 				<nav className="flex items-center gap-3 md:gap-6">
 					<a
+						href="#repos"
+						className="text-xs md:text-sm text-[#A3A3A3] hover:text-white transition-colors"
+					>
+						Repos
+					</a>
+					<a
 						href="#activity"
 						className="text-xs md:text-sm text-[#A3A3A3] hover:text-white transition-colors"
 					>
