@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { formatNumber } from "@/lib/utils/format";
+import { useEffect, useState } from "react";
 
 interface Activity {
 	repo: string;
@@ -97,7 +97,7 @@ export function ActivityFeed() {
 	}
 
 	return (
-		<section id="activity" className="py-12 md:py-20 px-4 md:px-6 bg-[#0A0A0A]">
+		<section id="activity" className="py-12 md:py-20 px-4 md:px-6 bg-[#0A0A0A] scroll-mt-8">
 			<div className="mx-auto max-w-7xl">
 				<div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
 					<div>
