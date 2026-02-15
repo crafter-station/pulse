@@ -110,6 +110,7 @@ export function Leaderboard() {
 										<div className="flex items-center gap-3 md:gap-4">
 											<span className="text-green-500 font-mono text-sm md:text-base">+{formatNumber(leaderboard[0].additions)}</span>
 											<span className="text-red-500 font-mono text-sm md:text-base">-{formatNumber(leaderboard[0].deletions)}</span>
+											<span className="text-[#737373] font-mono text-sm md:text-base">= {formatNumber(leaderboard[0].additions - leaderboard[0].deletions)} net</span>
 										</div>
 									</div>
 								</div>
@@ -150,6 +151,7 @@ export function Leaderboard() {
 														<div className="flex items-center gap-2 md:gap-3">
 															<span className="text-green-500 font-mono">+{formatNumber(member.additions)}</span>
 															<span className="text-red-500 font-mono">-{formatNumber(member.deletions)}</span>
+															<span className="text-[#737373] font-mono">= {formatNumber(member.additions - member.deletions)}</span>
 														</div>
 													</div>
 												</div>
@@ -186,7 +188,7 @@ export function Leaderboard() {
 											<div className="flex-1 min-w-0">
 												<div className="font-bold text-white text-sm md:text-base truncate">{member.name}</div>
 												<div className="text-xs md:text-sm text-[#737373]">
-													{member.commits} commits • <span className="text-green-500">+{formatNumber(member.additions)}</span> <span className="text-red-500">-{formatNumber(member.deletions)}</span>
+													{member.commits} commits • <span className="text-green-500">+{formatNumber(member.additions)}</span> <span className="text-red-500">-{formatNumber(member.deletions)}</span> <span className="text-[#525252]">= {formatNumber(member.additions - member.deletions)}</span>
 												</div>
 											</div>
 										</div>
