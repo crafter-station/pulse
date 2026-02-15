@@ -4,7 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { Leaderboard } from "@/components/Leaderboard";
-import { Repos } from "@/components/Repos";
+import { Repositories } from "@/components/Repositories";
 import { Stats } from "@/components/Stats";
 
 export default function Home() {
@@ -14,10 +14,10 @@ export default function Home() {
       <main>
         <Hero />
         <Stats />
-        <Repos />
-        <Analytics />
         <ActivityFeed />
         <Leaderboard />
+        <Repositories />
+        <Analytics />
       </main>
       <Footer />
     </div>
