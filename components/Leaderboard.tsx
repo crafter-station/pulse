@@ -88,33 +88,33 @@ export function Leaderboard() {
 					</div>
 				) : (
 					<>
-						<div className="relative overflow-hidden p-4 md:p-8 border-2 bg-[#FFD800] border-[#FFD800] mb-4">
-							<div className="watermark -top-6 -right-4 !text-[#0A0A0A] !opacity-[0.05]">01</div>
+						<div className="relative overflow-hidden p-4 md:p-8 border-2 bg-[#171717] border-[#FFD800] mb-4">
+							<div className="watermark -top-6 -right-4 !opacity-[0.03]">01</div>
 							<div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-6">
-								<div className="font-display text-5xl md:text-6xl font-black text-[#0A0A0A]/20 leading-none">{getRankLabel(0)}</div>
+								<div className="font-display text-5xl md:text-6xl font-black text-[#FFD800]/20 leading-none">{getRankLabel(0)}</div>
 								{leaderboard[0].avatarUrl ? (
 									<img
 										src={leaderboard[0].avatarUrl}
 										alt={leaderboard[0].name}
-										className="w-20 h-20 md:w-24 md:h-24 ring-4 ring-[#0A0A0A]/20"
+										className="w-20 h-20 md:w-24 md:h-24 ring-4 ring-[#FFD800]/20"
 									/>
 								) : (
-									<div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center bg-[#0A0A0A] text-[#FFD800] font-black text-2xl md:text-3xl border-4 border-[#0A0A0A]">
+									<div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center bg-[#262626] text-[#FFD800] font-black text-2xl md:text-3xl border-4 border-[#333]">
 										{leaderboard[0].name[0]?.toUpperCase() || "?"}
 									</div>
 								)}
 								<div className="flex-1 text-center sm:text-left">
-									<div className="font-display text-2xl md:text-3xl font-black text-[#0A0A0A] mb-2 uppercase">{leaderboard[0].name}</div>
+									<div className="font-display text-2xl md:text-3xl font-black text-white mb-2 uppercase">{leaderboard[0].name}</div>
 									<div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-6 text-base md:text-lg">
-										<span className="font-black text-[#0A0A0A]/80">{leaderboard[0].commits} commits</span>
+										<span className="font-black text-[#FFD800]">{leaderboard[0].commits} commits</span>
 										<div className="flex items-center gap-3 md:gap-4">
-											<span className="text-green-800 font-mono text-sm md:text-base font-bold">+{formatNumber(leaderboard[0].additions)}</span>
-											<span className="text-red-800 font-mono text-sm md:text-base font-bold">-{formatNumber(leaderboard[0].deletions)}</span>
-											<span className="text-[#0A0A0A]/40 font-mono text-sm md:text-base">= {formatNumber(leaderboard[0].additions - leaderboard[0].deletions)} net</span>
+											<span className="text-green-500 font-mono text-sm md:text-base font-bold">+{formatNumber(leaderboard[0].additions)}</span>
+											<span className="text-red-500 font-mono text-sm md:text-base font-bold">-{formatNumber(leaderboard[0].deletions)}</span>
+											<span className="text-[#737373] font-mono text-sm md:text-base">= {formatNumber(leaderboard[0].additions - leaderboard[0].deletions)} net</span>
 										</div>
 									</div>
 								</div>
-								<div className="sm:absolute top-4 md:top-6 right-4 md:right-6 px-3 md:px-4 py-1.5 md:py-2 bg-[#0A0A0A] text-[#FFD800] text-xs md:text-sm font-black uppercase tracking-widest border-2 border-[#0A0A0A]">
+								<div className="sm:absolute top-4 md:top-6 right-4 md:right-6 px-3 md:px-4 py-1.5 md:py-2 bg-[#FFD800] text-[#0A0A0A] text-xs md:text-sm font-black uppercase tracking-widest">
 									Top Shipper
 								</div>
 							</div>
