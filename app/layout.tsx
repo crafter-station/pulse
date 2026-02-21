@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Barlow, Barlow_Condensed, IBM_Plex_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
-const inter = Inter({
+const barlow = Barlow({
 	subsets: ["latin"],
+	weight: ["400", "500", "600", "700", "800", "900"],
+	variable: "--font-display",
+	display: "swap",
+});
+
+const barlowCondensed = Barlow_Condensed({
+	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
 	variable: "--font-sans",
 	display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const ibmPlexMono = IBM_Plex_Mono({
 	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
 	variable: "--font-mono",
 	display: "swap",
 });
@@ -41,7 +50,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+		<html lang="en" className={`${barlow.variable} ${barlowCondensed.variable} ${ibmPlexMono.variable}`}>
 			<body>
 				{children}
 				<Analytics />
