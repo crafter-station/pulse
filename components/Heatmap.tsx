@@ -76,9 +76,9 @@ export function Heatmap() {
 
 	if (loading) {
 		return (
-			<div className="bg-[#171717] border border-[#262626] p-4 md:p-6">
+			<div className="bg-[#171717] border-2 border-[#333] p-4 md:p-6">
 				<div className="h-32 flex items-center justify-center">
-					<div className="text-[#737373] text-sm animate-pulse">Loading heatmap...</div>
+					<div className="text-[#737373] text-sm animate-pulse font-mono uppercase tracking-widest">Loading heatmap...</div>
 				</div>
 			</div>
 		);
@@ -87,14 +87,14 @@ export function Heatmap() {
 	const totalCommits = data.reduce((sum, d) => sum + d.count, 0);
 
 	return (
-		<div className="bg-[#171717] border border-[#262626] p-4 md:p-6">
+		<div className="bg-[#171717] border-2 border-[#333] p-4 md:p-6">
 			<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
 				<div>
-					<h3 className="text-sm md:text-base font-bold text-white mb-1">Activity Heatmap</h3>
-					<p className="text-[10px] md:text-xs text-[#737373]">2026 • {totalCommits} total commits</p>
+					<h3 className="text-sm md:text-base font-black text-white mb-1 uppercase tracking-wider">[Activity Heatmap]</h3>
+					<p className="text-[10px] md:text-xs text-[#737373] font-mono uppercase tracking-widest">2026 // {totalCommits} total commits</p>
 				</div>
 				<div className="flex items-center gap-1.5 md:gap-2">
-					<span className="text-[10px] md:text-xs text-[#737373]">Less</span>
+					<span className="text-[10px] md:text-xs text-[#737373] font-mono uppercase">Less</span>
 					<div className="flex gap-0.5 md:gap-1">
 						<div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-[#0A0A0A] border border-[#262626]" />
 						<div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-[#FFD800]/15 border-[#FFD800]/15" />
@@ -103,7 +103,7 @@ export function Heatmap() {
 						<div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-[#FFD800]/75 border-[#FFD800]/75" />
 						<div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-[#FFD800] border border-[#FFD800]" />
 					</div>
-					<span className="text-[10px] md:text-xs text-[#737373]">More</span>
+					<span className="text-[10px] md:text-xs text-[#737373] font-mono uppercase">More</span>
 				</div>
 			</div>
 
@@ -114,7 +114,7 @@ export function Heatmap() {
 						{[0, 1, 2, 3, 4, 5, 6].map((i) => (
 							<div key={i} className="h-2.5 md:h-3 flex items-center justify-end">
 								{weekDayIndices.includes(i) && (
-									<span className="text-[8px] md:text-[10px] text-[#737373] pr-1 md:pr-1.5">{weekDays[weekDayIndices.indexOf(i)]}</span>
+									<span className="text-[8px] md:text-[10px] text-[#737373] pr-1 md:pr-1.5 font-mono uppercase">{weekDays[weekDayIndices.indexOf(i)]}</span>
 								)}
 							</div>
 						))}
@@ -124,7 +124,7 @@ export function Heatmap() {
 						<div className="grid grid-flow-col auto-cols-fr gap-0.5 md:gap-1">
 							{weeks.map((week, weekIndex) => (
 								<div key={weekIndex} className="flex flex-col gap-0.5 md:gap-1">
-									<div className="text-[8px] md:text-[10px] text-[#737373] h-3 md:h-4 flex items-end pb-0.5">
+									<div className="text-[8px] md:text-[10px] text-[#737373] h-3 md:h-4 flex items-end pb-0.5 font-mono uppercase">
 										{getMonthLabel(weekIndex)}
 									</div>
 									{week.map((day, dayIndex) => {
@@ -144,9 +144,9 @@ export function Heatmap() {
 												}`}
 												title={`${day.date}: ${day.count} commits`}
 											>
-												<div className="hidden md:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#0A0A0A] border border-[#FFD800] text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
-													<div className="font-bold text-[#FFD800] mb-0.5">{day.count} commits</div>
-													<div className="text-[#737373]">
+												<div className="hidden md:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-[#0A0A0A] border-2 border-[#FFD800] text-xs text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+													<div className="font-black text-[#FFD800] mb-0.5">{day.count} commits</div>
+													<div className="text-[#737373] font-mono uppercase">
 														{dayOfWeek}, {date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
 													</div>
 												</div>
