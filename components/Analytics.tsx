@@ -87,10 +87,10 @@ function Tooltip({ text }: { text: string }) {
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: 4 }}
 						transition={{ duration: 0.15 }}
-						className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 px-3 py-2 text-[11px] leading-relaxed text-[#D4D4D4] bg-[#1A1A1A] border border-[#333] shadow-xl pointer-events-none"
+						className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 px-3 py-2 text-[11px] leading-relaxed text-[#D4D4D4] bg-[#1A1A1A] border-2 border-[#333] shadow-xl pointer-events-none"
 					>
 						{text}
-						<div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1A1A1A] border-r border-b border-[#333] rotate-45 -mt-1" />
+						<div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1A1A1A] border-r-2 border-b-2 border-[#333] rotate-45 -mt-1" />
 					</motion.div>
 				)}
 			</AnimatePresence>
@@ -103,10 +103,10 @@ function ChangeBadge({ change }: { change: number }) {
 	const Icon = isPositive ? TrendingUp : TrendingDown;
 	return (
 		<span
-			className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] md:text-xs font-medium ${
+			className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] md:text-xs font-black uppercase ${
 				isPositive
-					? "bg-green-500/10 text-green-400 border border-green-500/20"
-					: "bg-red-500/10 text-red-400 border border-red-500/20"
+					? "bg-green-500/10 text-green-400 border-2 border-green-500/20"
+					: "bg-red-500/10 text-red-400 border-2 border-red-500/20"
 			}`}
 		>
 			<Icon className="w-3 h-3" />
@@ -133,25 +133,20 @@ function GrowthCard({
 		<div
 			className={`p-4 md:p-6 ${
 				accent
-					? "relative bg-gradient-to-br from-[#FFD800]/10 to-[#FFD800]/5 border border-[#FFD800]/20"
-					: "bg-[#171717] border border-[#262626] hover:border-[#333] transition-colors"
+					? "bg-[#FFD800] border-2 border-[#FFD800]"
+					: "bg-[#171717] border-2 border-[#333] hover:border-[#FFD800]/30 transition-colors"
 			}`}
 		>
-			{accent && (
-				<div className="absolute inset-0 overflow-hidden pointer-events-none">
-					<div className="absolute top-0 right-0 w-32 h-32 bg-[#FFD800]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-				</div>
-			)}
 			<div className="relative">
 				<div
-					className={`flex items-center gap-1.5 text-xs md:text-sm font-medium uppercase tracking-wider mb-2 ${
-						accent ? "text-[#FFD800]" : "text-[#737373]"
+					className={`flex items-center gap-1.5 text-xs md:text-sm font-black uppercase tracking-widest mb-2 font-mono ${
+						accent ? "text-[#0A0A0A]/60" : "text-[#737373]"
 					}`}
 				>
-					{label}
+					[{label}]
 					<Tooltip text={tooltip} />
 				</div>
-				<div className="text-2xl md:text-4xl font-black text-white mb-2">
+				<div className={`font-display text-2xl md:text-4xl font-black mb-2 ${accent ? "text-[#0A0A0A]" : "text-white"}`}>
 					{value}
 				</div>
 				<ChangeBadge change={change} />
@@ -176,16 +171,16 @@ function WeeklyBarChart({
 	}, []);
 
 	return (
-		<div className="bg-[#171717] border border-[#262626] p-4 md:p-6">
+		<div className="bg-[#171717] border-2 border-[#333] p-4 md:p-6">
 			<div className="flex items-center justify-between mb-6">
 				<div>
 					<div className="flex items-center gap-1.5">
-						<h3 className="text-base md:text-lg font-bold text-white">
-							Weekly Commits
+						<h3 className="text-base md:text-lg font-black text-white uppercase tracking-wider">
+							[Weekly Commits]
 						</h3>
 						<Tooltip text="Commit volume per week over the last 12 weeks. Helps spot shipping rhythm and seasonal patterns." />
 					</div>
-					<p className="text-xs md:text-sm text-[#737373]">Last 12 weeks</p>
+					<p className="text-xs md:text-sm text-[#737373] font-mono uppercase tracking-widest">Last 12 weeks</p>
 				</div>
 				<AnimatePresence mode="wait">
 					{activeIndex !== null && data[activeIndex] && (
@@ -197,10 +192,10 @@ function WeeklyBarChart({
 							transition={{ type: "spring", stiffness: 300, damping: 25 }}
 							className="text-right"
 						>
-							<div className="text-xl md:text-2xl font-black text-[#FFD800]">
+							<div className="font-display text-xl md:text-2xl font-black text-[#FFD800]">
 								{data[activeIndex].commits}
 							</div>
-							<div className="text-xs text-[#737373]">
+							<div className="text-xs text-[#737373] font-mono uppercase">
 								{data[activeIndex].week}
 							</div>
 						</motion.div>
@@ -223,16 +218,14 @@ function WeeklyBarChart({
 						/>
 						<Bar
 							dataKey="commits"
-							radius={[2, 2, 0, 0]}
+							radius={[0, 0, 0, 0]}
 							onMouseEnter={handleMouseEnter}
 							onMouseLeave={handleMouseLeave}
 						>
 							{data.map((_, index) => (
 								<Cell
 									key={index}
-									fill={
-										activeIndex === index ? "#FFD800" : "#FFD800"
-									}
+									fill="#FFD800"
 									fillOpacity={activeIndex === null ? 0.6 : activeIndex === index ? 1 : 0.15}
 									style={{
 										transition: "fill-opacity 0.3s ease",
@@ -270,22 +263,20 @@ export function Analytics() {
 		return () => clearInterval(interval);
 	}, []);
 
-	const placeholder = "—";
+	const placeholder = "---";
 
 	return (
 		<section id="analytics" className="py-12 md:py-16 px-4 md:px-6">
 			<div className="mx-auto max-w-7xl">
-				{/* Section header */}
 				<div className="mb-6 md:mb-8">
-					<h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
-						Analytics
+					<h2 className="font-display text-xl md:text-2xl font-black text-white tracking-tight uppercase">
+						[Analytics]
 					</h2>
-					<p className="text-xs md:text-sm text-[#737373] mt-1">
+					<p className="text-xs md:text-sm text-[#737373] mt-1 uppercase tracking-widest font-mono">
 						Growth and trends
 					</p>
 				</div>
 
-				{/* Growth cards row */}
 				<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4">
 					<GrowthCard
 						label="Commits WoW"
@@ -300,7 +291,7 @@ export function Analytics() {
 					/>
 					<GrowthCard
 						label="Lines Added WoW"
-						tooltip="New lines of code this week vs last. Tracks raw output — spikes may indicate new features landing."
+						tooltip="New lines of code this week vs last. Tracks raw output -- spikes may indicate new features landing."
 						value={
 							loading || !data
 								? placeholder
@@ -330,61 +321,59 @@ export function Analytics() {
 					/>
 				</div>
 
-				{/* Weekly bar chart */}
 				{!loading && data && data.weeklyChart.length > 0 && (
 					<div className="mb-3 md:mb-4">
 						<WeeklyBarChart data={data.weeklyChart} />
 					</div>
 				)}
 
-				{/* Contributor & Velocity row */}
 				<div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-4">
-					<div className="bg-[#171717] border border-[#262626] p-4 md:p-6 hover:border-[#333] transition-colors">
+					<div className="bg-[#171717] border-2 border-[#333] p-4 md:p-6 hover:border-[#FFD800]/30 transition-colors">
 						<div className="flex items-center gap-2 mb-3">
 							<Users className="w-4 h-4 text-[#FFD800]" />
-							<span className="text-xs md:text-sm text-[#737373] font-medium uppercase tracking-wider">
-								New Contributors
+							<span className="text-xs md:text-sm text-[#737373] font-black uppercase tracking-widest font-mono">
+								[New Contributors]
 							</span>
 							<Tooltip text="People who made their first-ever commit in the last 30 days. Indicates team growth and onboarding success." />
 						</div>
-						<div className="text-2xl md:text-4xl font-black text-white mb-1">
+						<div className="font-display text-2xl md:text-4xl font-black text-white mb-1">
 							{loading || !data
 								? placeholder
 								: data.contributorTrends.newThisMonth}
 						</div>
-						<div className="text-xs md:text-sm text-[#A3A3A3]">
+						<div className="text-xs md:text-sm text-[#A3A3A3] uppercase tracking-wider font-bold">
 							This month
 						</div>
 					</div>
 
-					<div className="bg-[#171717] border border-[#262626] p-4 md:p-6 hover:border-[#333] transition-colors">
+					<div className="bg-[#171717] border-2 border-[#333] p-4 md:p-6 hover:border-[#FFD800]/30 transition-colors">
 						<div className="flex items-center gap-2 mb-3">
 							<GitCommit className="w-4 h-4 text-[#FFD800]" />
-							<span className="text-xs md:text-sm text-[#737373] font-medium uppercase tracking-wider">
-								Avg Commits / Dev
+							<span className="text-xs md:text-sm text-[#737373] font-black uppercase tracking-widest font-mono">
+								[Avg Commits / Dev]
 							</span>
 							<Tooltip text="Total commits this week divided by active contributors. Measures individual throughput without penalizing team size." />
 						</div>
-						<div className="text-2xl md:text-4xl font-black text-white mb-1">
+						<div className="font-display text-2xl md:text-4xl font-black text-white mb-1">
 							{loading || !data
 								? placeholder
 								: data.velocity.avgCommitsPerContributor}
 						</div>
-						<div className="text-xs md:text-sm text-[#A3A3A3]">
+						<div className="text-xs md:text-sm text-[#A3A3A3] uppercase tracking-wider font-bold">
 							Per week
 						</div>
 					</div>
 
-					<div className="bg-[#171717] border border-[#262626] p-4 md:p-6 hover:border-[#333] transition-colors">
+					<div className="bg-[#171717] border-2 border-[#333] p-4 md:p-6 hover:border-[#FFD800]/30 transition-colors">
 						<div className="flex items-center gap-2 mb-3">
 							<Flame className="w-4 h-4 text-[#FFD800]" />
-							<span className="text-xs md:text-sm text-[#737373] font-medium uppercase tracking-wider">
-								Top Growing Repos
+							<span className="text-xs md:text-sm text-[#737373] font-black uppercase tracking-widest font-mono">
+								[Top Growing Repos]
 							</span>
 							<Tooltip text="Repos with the biggest commit increase this week vs last. Shows where the team is focusing energy." />
 						</div>
 						{loading || !data ? (
-							<div className="text-2xl font-black text-white">
+							<div className="font-display text-2xl font-black text-white">
 								{placeholder}
 							</div>
 						) : (
@@ -394,11 +383,11 @@ export function Analytics() {
 										key={repo.name}
 										className="flex items-center justify-between"
 									>
-										<span className="text-xs md:text-sm text-[#A3A3A3] truncate mr-2">
+										<span className="text-xs md:text-sm text-[#A3A3A3] truncate mr-2 font-mono">
 											{repo.name}
 										</span>
 										<span
-											className={`text-xs md:text-sm font-bold shrink-0 ${
+											className={`text-xs md:text-sm font-black shrink-0 font-mono ${
 												repo.growth >= 0
 													? "text-green-400"
 													: "text-red-400"
@@ -414,15 +403,14 @@ export function Analytics() {
 					</div>
 				</div>
 
-				{/* YTD Summary bar */}
-				<div className="bg-[#0A0A0A] border border-[#262626] p-4 md:p-6">
+				<div className="bg-[#0A0A0A] border-2 border-[#333] p-4 md:p-6">
 					<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 						<div>
-							<div className="flex items-center gap-1.5 text-xs md:text-sm text-[#737373] mb-1">
-								YTD Commits
+							<div className="flex items-center gap-1.5 text-xs md:text-sm text-[#737373] mb-1 font-mono uppercase tracking-widest">
+								[YTD Commits]
 								<Tooltip text="Total commits since January 1st. The big-picture measure of how much the team has shipped this year." />
 							</div>
-							<div className="text-2xl md:text-3xl font-black text-white font-mono">
+							<div className="font-display text-2xl md:text-3xl font-black text-white font-mono">
 								{loading || !data
 									? placeholder
 									: formatNumber(data.ytd.commits)}
@@ -430,11 +418,11 @@ export function Analytics() {
 						</div>
 						<div className="h-px sm:h-8 w-full sm:w-px bg-[#262626]" />
 						<div>
-							<div className="flex items-center gap-1.5 text-xs md:text-sm text-[#737373] mb-1">
-								YTD Lines Added
+							<div className="flex items-center gap-1.5 text-xs md:text-sm text-[#737373] mb-1 font-mono uppercase tracking-widest">
+								[YTD Lines Added]
 								<Tooltip text="Total new lines of code this year. Reflects cumulative feature development and expansion." />
 							</div>
-							<div className="text-2xl md:text-3xl font-black text-green-500 font-mono">
+							<div className="font-display text-2xl md:text-3xl font-black text-green-500 font-mono">
 								+
 								{loading || !data
 									? placeholder
@@ -443,11 +431,11 @@ export function Analytics() {
 						</div>
 						<div className="h-px sm:h-8 w-full sm:w-px bg-[#262626]" />
 						<div>
-							<div className="flex items-center gap-1.5 text-xs md:text-sm text-[#737373] mb-1">
-								YTD Lines Removed
+							<div className="flex items-center gap-1.5 text-xs md:text-sm text-[#737373] mb-1 font-mono uppercase tracking-widest">
+								[YTD Lines Removed]
 								<Tooltip text="Total lines deleted this year. High removal alongside additions shows active refactoring and code health." />
 							</div>
-							<div className="text-2xl md:text-3xl font-black text-red-500 font-mono">
+							<div className="font-display text-2xl md:text-3xl font-black text-red-500 font-mono">
 								-
 								{loading || !data
 									? placeholder
