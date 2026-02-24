@@ -6,7 +6,7 @@ Tracks pushes to `main` across all org repos via GitHub webhooks.
 
 ## Stack
 
-- **Framework**: Next.js 15 + React 19 + TypeScript
+- **Framework**: Next.js 16 + React 19 + TypeScript
 - **Styling**: Tailwind CSS 4
 - **Database**: Neon (Serverless Postgres) + Drizzle ORM
 - **Webhooks**: GitHub org webhooks → Next.js API route
@@ -43,6 +43,7 @@ GITHUB_TOKEN=your_github_token_here
 ```
 
 Generate webhook secret:
+
 ```bash
 openssl rand -hex 32
 ```
@@ -78,6 +79,7 @@ vercel --prod
 ```
 
 Add environment variables in Vercel dashboard:
+
 - `DATABASE_URL`
 - `GITHUB_WEBHOOK_SECRET`
 
