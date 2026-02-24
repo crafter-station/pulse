@@ -2,7 +2,6 @@
 
 import { formatNumber } from "@/lib/utils/format";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface CommitItem {
@@ -35,8 +34,8 @@ interface RepoDetailData {
 }
 
 export function RepositoryDetail({ name }: { name: string }) {
-  const router = useRouter();
   const [data, setData] = useState<RepoDetailData | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -93,13 +92,12 @@ export function RepositoryDetail({ name }: { name: string }) {
           <p className="text-sm text-[#737373] mb-6 max-w-sm mx-auto">
             We don’t have data for this repository yet.
           </p>
-          <button
-            type="button"
-            onClick={() => router.push("/#repositories")}
-            className="text-sm font-medium text-[#FFD800] hover:underline touch-manipulation"
+          <Link
+            href="/#repositories"
+            className="text-sm text-[#737373] hover:text-white transition-colors mb-3 inline-block touch-manipulation"
           >
             ← Back to Repositories
-          </button>
+          </Link>
         </div>
       </div>
     );
