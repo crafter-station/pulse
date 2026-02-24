@@ -8,17 +8,19 @@
   --font-sans: "Barlow Condensed", system-ui, -apple-system, sans-serif;
   --font-mono: "IBM Plex Mono", "Courier Prime", monospace;
 
-  --color-brand: #FFD800;
-  --color-brand-muted: #996B00;
+  --color-brand: #ffd800;
+  --color-brand-muted: #996b00;
 
-  --color-dark: #0A0A0A;
+  --color-dark: #0a0a0a;
   --color-dark-elevated: #171717;
   --color-dark-border: #333333;
   --color-dark-border-subtle: #262626;
 }
 
 html {
-  background-color: #0A0A0A;
+  background-color: #0a0a0a;
+  scroll-behavior: smooth;
+  scroll-padding-top: 2rem;
 }
 
 body {
@@ -71,37 +73,37 @@ body {
 
 :root {
   --radius: 0;
-  --background: #0A0A0A;
+  --background: #0a0a0a;
   --foreground: #ffffff;
   --card: #171717;
   --card-foreground: #ffffff;
   --popover: #171717;
   --popover-foreground: #ffffff;
-  --primary: #FFD800;
-  --primary-foreground: #0A0A0A;
+  --primary: #ffd800;
+  --primary-foreground: #0a0a0a;
   --secondary: #262626;
   --secondary-foreground: #ffffff;
   --muted: #262626;
   --muted-foreground: #737373;
-  --accent: #FFD800;
-  --accent-foreground: #0A0A0A;
-  --destructive: #B91C1C;
+  --accent: #ffd800;
+  --accent-foreground: #0a0a0a;
+  --destructive: #b91c1c;
   --border: #333333;
   --input: #333333;
-  --ring: #FFD800;
-  --chart-1: #FFD800;
-  --chart-2: #996B00;
+  --ring: #ffd800;
+  --chart-1: #ffd800;
+  --chart-2: #996b00;
   --chart-3: #737373;
   --chart-4: #333333;
   --chart-5: #171717;
   --sidebar: #171717;
   --sidebar-foreground: #ffffff;
-  --sidebar-primary: #FFD800;
-  --sidebar-primary-foreground: #0A0A0A;
+  --sidebar-primary: #ffd800;
+  --sidebar-primary-foreground: #0a0a0a;
   --sidebar-accent: #262626;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #333333;
-  --sidebar-ring: #FFD800;
+  --sidebar-ring: #ffd800;
 }
 
 @layer base {
