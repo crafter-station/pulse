@@ -72,11 +72,11 @@ export function Leaderboard() {
 					</p>
 				</div>
 				{loading ? (
-					<div className="space-y-4">
-						<div className="h-32 bg-[#171717] border border-[#262626] animate-pulse" />
+					<div className="space-y-4 min-h-[420px]">
+						<div className="h-32 bg-[#171717] border border-[#262626] animate-pulse rounded-lg" />
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							{[...Array(2)].map((_, i) => (
-								<div key={i} className="h-32 bg-[#171717] border border-[#262626] animate-pulse" />
+							{[...Array(4)].map((_, i) => (
+								<div key={i} className="h-32 bg-[#171717] border border-[#262626] animate-pulse rounded-lg" />
 							))}
 						</div>
 					</div>

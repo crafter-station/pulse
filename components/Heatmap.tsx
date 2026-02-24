@@ -76,8 +76,8 @@ export function Heatmap() {
 
 	if (loading) {
 		return (
-			<div className="bg-[#171717] border border-[#262626] p-4 md:p-6">
-				<div className="h-32 flex items-center justify-center">
+			<div className="bg-[#171717] border border-[#262626] p-4 md:p-6 min-h-[140px]">
+				<div className="h-full min-h-[100px] flex items-center justify-center">
 					<div className="text-[#737373] text-sm animate-pulse">Loading heatmap...</div>
 				</div>
 			</div>

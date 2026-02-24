@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { GitHubLogo } from "./icons/GitHubLogo";
 
@@ -18,6 +18,10 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ isOpen, onClose, menuId }: MobileMenuProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -82,7 +86,7 @@ export function MobileMenu({ isOpen, onClose, menuId }: MobileMenuProps) {
     </div>
   );
 
-  if (typeof document === "undefined") return null;
+  if (!mounted) return null;
   return createPortal(menuContent, document.body);
 }
 

@@ -5,8 +5,8 @@ import { desc, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * GET /api/repos/[name]
- * Repo detail: info, recent commits, top contributors (all time for this repo).
+ * GET /api/repositories/[name]
+ * Repository detail: info, recent commits, top contributors (all time for this repo).
  */
 export async function GET(
 	_request: NextRequest,
@@ -26,7 +26,7 @@ export async function GET(
 			.where(eq(repos.name, repoName));
 
 		if (!repo) {
-			return NextResponse.json({ error: "Repo not found" }, { status: 404 });
+			return NextResponse.json({ error: "Repository not found" }, { status: 404 });
 		}
 
 		const [recentCommits, topContributors] = await Promise.all([
@@ -92,9 +92,9 @@ export async function GET(
 			},
 		);
 	} catch (error) {
-		console.error("Repo detail API error:", error);
+		console.error("Repository detail API error:", error);
 		return NextResponse.json(
-			{ error: "Failed to fetch repo" },
+			{ error: "Failed to fetch repository" },
 			{ status: 500 },
 		);
 	}

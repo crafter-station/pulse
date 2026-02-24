@@ -7,17 +7,17 @@
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", monospace;
 
-  --color-brand: #FFD800;
-  --color-brand-muted: #996B00;
+  --color-brand: #ffd800;
+  --color-brand-muted: #996b00;
 
-  --color-dark: #0A0A0A;
+  --color-dark: #0a0a0a;
   --color-dark-elevated: #171717;
   --color-dark-border: #333333;
   --color-dark-border-subtle: #262626;
 }
 
 html {
-  background-color: #0A0A0A;
+  background-color: #0a0a0a;
 }
 
 body {

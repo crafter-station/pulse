@@ -43,7 +43,9 @@ export function RepositoryDetail({ name }: { name: string }) {
   useEffect(() => {
     const fetchRepo = async () => {
       try {
-        const res = await fetch(`/api/repos/${encodeURIComponent(name)}`);
+        const res = await fetch(
+          `/api/repositories/${encodeURIComponent(name)}`,
+        );
         if (!res.ok) {
           if (res.status === 404) setError(true);
           else throw new Error("Failed to fetch");
@@ -52,7 +54,7 @@ export function RepositoryDetail({ name }: { name: string }) {
         const json = await res.json();
         setData(json);
       } catch (err) {
-        console.error("Error fetching repo:", err);
+        console.error("Error fetching repository:", err);
         setError(true);
       } finally {
         setLoading(false);
@@ -86,17 +88,17 @@ export function RepositoryDetail({ name }: { name: string }) {
         <div className="mx-auto max-w-4xl text-center py-16 md:py-20">
           <div className="text-4xl md:text-5xl mb-4">🔍</div>
           <h1 className="text-lg md:text-xl font-bold text-white mb-2">
-            Repo not found
+            Repository not found
           </h1>
           <p className="text-sm text-[#737373] mb-6 max-w-sm mx-auto">
-            We don’t have data for this repo yet.
+            We don’t have data for this repository yet.
           </p>
           <button
             type="button"
-            onClick={() => router.push("/#repos")}
+            onClick={() => router.push("/#repositories")}
             className="text-sm font-medium text-[#FFD800] hover:underline touch-manipulation"
           >
-            ← Back to Repos
+            ← Back to Repositories
           </button>
         </div>
       </div>
@@ -111,10 +113,10 @@ export function RepositoryDetail({ name }: { name: string }) {
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 md:mb-10">
           <Link
-            href="/#repos"
+            href="/#repositories"
             className="text-sm text-[#737373] hover:text-white transition-colors mb-3 inline-block touch-manipulation"
           >
-            ← Repos
+            ← Repositories
           </Link>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
             <h1 className="text-xl font-black text-white break-all sm:text-2xl md:text-3xl min-w-0">

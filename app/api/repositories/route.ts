@@ -7,8 +7,8 @@ import { NextResponse } from "next/server";
 const MAX_REPOS = 12;
 
 /**
- * GET /api/repos
- * List the most recently active repos (by last push), with commits this week and top contributor.
+ * GET /api/repositories
+ * List the most recently active repositories (by last push), with commits this week and top contributor.
  */
 export async function GET() {
 	try {
@@ -90,7 +90,7 @@ export async function GET() {
 			},
 		});
 	} catch (error) {
-		console.error("Repos API error:", error);
-		return NextResponse.json({ error: "Failed to fetch repos" }, { status: 500 });
+		console.error("Repositories API error:", error);
+		return NextResponse.json({ error: "Failed to fetch repositories" }, { status: 500 });
 	}
 }

@@ -2,7 +2,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { RepositoryDetail } from "@/components/RepositoryDetail";
 
-export default async function RepoPage({
+export default async function RepositoryPage({
   params,
 }: {
   params: Promise<{ name: string }>;

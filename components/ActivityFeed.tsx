@@ -114,12 +114,12 @@ export function ActivityFeed() {
 
 	if (loading) {
 		return (
-			<section id="activity" className="py-20 px-6 bg-[#0A0A0A]">
+			<section id="activity" className="py-12 md:py-20 px-4 md:px-6 bg-[#0A0A0A] min-h-[1300px]">
 				<div className="mx-auto max-w-7xl">
-					<div className="flex items-center justify-between mb-8">
+					<div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
 						<div>
-							<h2 className="text-3xl font-black text-white mb-2">Recent Activity</h2>
-							<p className="text-[#737373]">Live feed of all commits to main</p>
+							<h2 className="text-2xl md:text-3xl font-black text-white mb-2">Recent Activity</h2>
+							<p className="text-sm md:text-base text-[#737373]">Live feed of all commits to main</p>
 						</div>
 						<div className="flex items-center gap-2 px-4 py-2 bg-[#171717] border border-[#262626]">
 							<span className="w-2 h-2 bg-gray-500 rounded-full animate-pulse" />
@@ -127,8 +127,8 @@ export function ActivityFeed() {
 						</div>
 					</div>
 					<div className="space-y-2">
-						{[...Array(8)].map((_, i) => (
-							<div key={i} className="h-16 bg-[#171717]/50 border border-[#262626] animate-pulse" />
+						{[...Array(20)].map((_, i) => (
+							<div key={i} className="h-16 bg-[#171717]/50 border border-[#262626] animate-pulse rounded" />
 						))}
 					</div>
 				</div>
@@ -191,7 +191,7 @@ export function ActivityFeed() {
 					>
 						{repos.map((repo) => (
 							<option key={repo} value={repo}>
-								{repo === "all" ? "All repos" : repo}
+								{repo === "all" ? "All repositories" : repo}
 							</option>
 						))}
 					</select>

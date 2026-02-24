@@ -24,12 +24,12 @@ export function Repositories() {
   useEffect(() => {
     const fetchRepos = async () => {
       try {
-        const res = await fetch("/api/repos");
+        const res = await fetch("/api/repositories");
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         setRepos(data);
       } catch (err) {
-        console.error("Error fetching repos:", err);
+        console.error("Error fetching repositories:", err);
       } finally {
         setLoading(false);
       }
@@ -69,7 +69,7 @@ export function Repositories() {
           <div className="text-center py-16 border border-[#262626] bg-[#171717]/30 rounded-lg">
             <div className="text-5xl mb-3">📦</div>
             <div className="text-lg font-bold text-white mb-1">
-              No repos yet
+              No repositories yet
             </div>
             <div className="text-[#737373] text-sm">
               Repositories appear here after the first push to main
@@ -80,7 +80,7 @@ export function Repositories() {
             {repos.map((repo) => (
               <Link
                 key={repo.name}
-                href={`/repos/${encodeURIComponent(repo.name)}`}
+                href={`/repositories/${encodeURIComponent(repo.name)}`}
                 className="block p-4 md:p-5 bg-[#171717] border border-[#262626] hover:border-brand/30 transition-colors rounded-lg group"
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
