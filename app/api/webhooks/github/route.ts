@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
 
 		const repoName = payload.repository.name;
 		const fullRepoName = payload.repository.full_name;
+		const isPrivate = Boolean(payload.repository?.private);
 		const pusher = payload.pusher.name;
 		const pusherAvatar = payload.sender.avatar_url;
 
@@ -48,12 +49,14 @@ export async function POST(request: NextRequest) {
 			.values({
 				name: repoName,
 				fullName: fullRepoName,
+				isPrivate,
 				lastPushAt: new Date(),
 				updatedAt: new Date(),
 			})
 			.onConflictDoUpdate({
 				target: repos.name,
 				set: {
+					isPrivate,
 					lastPushAt: new Date(),
 					updatedAt: new Date(),
 				},
