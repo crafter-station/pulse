@@ -113,8 +113,6 @@ bun db:studio    # Open Drizzle Studio
 bun backfill     # Seed with historical data
 ```
 
-## Links
-
 - [pulse.crafterstation.com](https://pulse.crafterstation.com)
 - [org.crafter.run](https://org.crafter.run)
 - [GitHub Org](https://github.com/crafter-station)
