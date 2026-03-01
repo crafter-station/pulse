@@ -19,6 +19,7 @@ export async function GET() {
 				name: repos.name,
 				fullName: repos.fullName,
 				lastPushAt: repos.lastPushAt,
+				isPrivate: repos.isPrivate,
 			})
 			.from(repos)
 			.where(eq(repos.isActive, true))
@@ -79,6 +80,7 @@ export async function GET() {
 				name: repo.name,
 				fullName: repo.fullName,
 				lastPushAt: repo.lastPushAt,
+				isPrivate: repo.isPrivate ?? false,
 				commitsThisWeek: stats?.commitsThisWeek ?? 0,
 				topContributorThisWeek: stats?.topContributor ?? null,
 			};
