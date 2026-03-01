@@ -1,5 +1,6 @@
 "use client";
 
+import { PrivateBadge } from "@/components/PrivateBadge";
 import { formatNumber } from "@/lib/utils/format";
 import { formatRelativeTime } from "@/lib/utils/time";
 import Link from "next/link";
@@ -9,6 +10,7 @@ interface RepoItem {
   name: string;
   fullName: string;
   lastPushAt: string | null;
+  isPrivate: boolean;
   commitsThisWeek: number;
   topContributorThisWeek: {
     username: string;
@@ -89,11 +91,14 @@ export function Repositories() {
                   <span className="font-display font-black text-white text-lg truncate group-hover:text-[#FFD800] transition-colors uppercase">
                     {repo.name}
                   </span>
-                  {repo.commitsThisWeek > 0 && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    {repo.isPrivate && <PrivateBadge />}
+                    {repo.commitsThisWeek > 0 && (
                     <span className="shrink-0 text-xs font-black uppercase bg-[#FFD800]/10 text-[#FFD800] border-2 border-[#FFD800]/20 px-2 py-0.5">
                       {formatNumber(repo.commitsThisWeek)} this week
                     </span>
-                  )}
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center justify-between gap-2 text-sm text-[#737373] font-mono uppercase tracking-wider">
                   <span>
