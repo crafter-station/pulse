@@ -28,6 +28,22 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 		}
 
+		if (event === "repository") {
+			const payload = JSON.parse(body);
+			if (payload.action === "publicized" || payload.action === "privatized") {
+				const repoName = payload.repository.name;
+				const isPrivate = payload.action === "privatized";
+
+				await db
+					.update(repos)
+					.set({ isPrivate, updatedAt: new Date() })
+					.where(eq(repos.name, repoName));
+
+				return NextResponse.json({ message: `Repository visibility updated to ${isPrivate ? "private" : "public"}` }, { status: 200 });
+			}
+			return NextResponse.json({ message: "Repository event ignored" }, { status: 200 });
+		}
+
 		if (event !== "push") {
 			return NextResponse.json({ message: "Event ignored" }, { status: 200 });
 		}
