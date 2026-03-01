@@ -21,6 +21,7 @@ export async function GET(
 				name: repos.name,
 				fullName: repos.fullName,
 				lastPushAt: repos.lastPushAt,
+				isPrivate: repos.isPrivate,
 			})
 			.from(repos)
 			.where(eq(repos.name, repoName));
@@ -29,13 +30,17 @@ export async function GET(
 			return NextResponse.json({ error: "Repository not found" }, { status: 404 });
 		}
 
+		const isPrivate = repo.isPrivate ?? false;
+
 		const [recentCommits, topContributors] = await Promise.all([
-			db
-				.select()
-				.from(commits)
-				.where(eq(commits.repoName, repoName))
-				.orderBy(desc(commits.pushedAt))
-				.limit(30),
+			isPrivate
+				? []
+				: db
+						.select()
+						.from(commits)
+						.where(eq(commits.repoName, repoName))
+						.orderBy(desc(commits.pushedAt))
+						.limit(30),
 			db
 				.select({
 					username: commits.authorUsername,
@@ -51,23 +56,25 @@ export async function GET(
 				.limit(10),
 		]);
 
-		const formattedCommits = recentCommits.map((c) => {
-			const cleanMessage = c.message
-				.split("\n")
-				.filter((line) => !line.includes("Co-Authored-By:"))
-				.join("\n")
-				.trim();
-			return {
-				repo: c.repoName,
-				author: c.authorUsername,
-				avatarUrl: c.authorAvatarUrl,
-				message: cleanMessage,
-				time: formatRelativeTime(c.pushedAt),
-				additions: c.additions ?? 0,
-				deletions: c.deletions ?? 0,
-				commitUrl: c.commitUrl,
-			};
-		});
+		const formattedCommits = Array.isArray(recentCommits)
+			? recentCommits.map((c) => {
+					const cleanMessage = c.message
+						.split("\n")
+						.filter((line) => !line.includes("Co-Authored-By:"))
+						.join("\n")
+						.trim();
+					return {
+						repo: c.repoName,
+						author: c.authorUsername,
+						avatarUrl: c.authorAvatarUrl,
+						message: cleanMessage,
+						time: formatRelativeTime(c.pushedAt),
+						additions: c.additions ?? 0,
+						deletions: c.deletions ?? 0,
+						commitUrl: c.commitUrl,
+					};
+				})
+			: [];
 
 		return NextResponse.json(
 			{
@@ -75,6 +82,7 @@ export async function GET(
 					name: repo.name,
 					fullName: repo.fullName,
 					lastPushAt: repo.lastPushAt,
+					isPrivate,
 				},
 				recentCommits: formattedCommits,
 				topContributors: topContributors.map((c) => ({

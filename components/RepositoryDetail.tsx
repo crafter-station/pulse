@@ -1,5 +1,6 @@
 "use client";
 
+import { PrivateBadge } from "@/components/PrivateBadge";
 import { formatNumber } from "@/lib/utils/format";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -28,6 +29,7 @@ interface RepoDetailData {
     name: string;
     fullName: string;
     lastPushAt: string | null;
+    isPrivate: boolean;
   };
   recentCommits: CommitItem[];
   topContributors: ContributorItem[];
@@ -120,15 +122,18 @@ export function RepositoryDetail({ name }: { name: string }) {
             <h1 className="text-xl font-black text-white break-all sm:text-2xl md:text-3xl min-w-0">
               {repo.name}
             </h1>
+            {repo.isPrivate && <PrivateBadge />}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <a
-                href={githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex text-sm font-medium text-[#A3A3A3] hover:text-[#FFD800] transition-colors border border-[#262626] hover:border-[#FFD800]/30 px-3 py-2 rounded touch-manipulation"
-              >
-                View on GitHub
-              </a>
+              {!repo.isPrivate && (
+                <a
+                  href={githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex text-sm font-medium text-[#A3A3A3] hover:text-[#FFD800] transition-colors border border-[#262626] hover:border-[#FFD800]/30 px-3 py-2 rounded touch-manipulation"
+                >
+                  View on GitHub
+                </a>
+              )}
               {repo.lastPushAt && (
                 <span className="text-xs text-[#737373] sm:text-sm">
                   Last push {new Date(repo.lastPushAt).toLocaleDateString()}
@@ -244,63 +249,71 @@ export function RepositoryDetail({ name }: { name: string }) {
           </section>
         )}
 
-        <section>
-          <h2 className="text-base font-bold text-white mb-3 md:text-lg md:mb-4">
-            Recent commits
-          </h2>
-          {recentCommits.length === 0 ? (
-            <div className="border border-[#262626] bg-[#171717]/30 rounded-lg py-10 md:py-12 text-center text-[#737373] text-sm">
-              No commits yet
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recentCommits.map((commit) => (
-                <a
-                  key={commit.commitUrl}
-                  href={commit.commitUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block p-3 bg-[#171717] border border-[#262626] hover:border-[#333] transition-colors rounded-lg touch-manipulation md:p-4"
-                >
-                  <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 md:gap-x-3">
-                    <div className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      {commit.avatarUrl ? (
-                        <img
-                          src={commit.avatarUrl}
-                          alt=""
-                          className="w-6 h-6 rounded-full shrink-0"
-                        />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-[#262626] shrink-0 flex items-center justify-center text-xs font-bold text-[#FFD800]">
-                          {commit.author[0]?.toUpperCase() ?? "?"}
-                        </div>
-                      )}
-                      <span className="font-medium text-white text-sm">
-                        {commit.author}
-                      </span>
-                      <span className="text-xs text-[#737373]">
-                        {commit.time}
-                      </span>
-                    </div>
-                    <p className="col-span-2 text-sm text-[#A3A3A3] line-clamp-2 min-w-0 mt-1">
-                      {commit.message}
-                    </p>
-                    {(commit.additions > 0 || commit.deletions > 0) && (
-                      <div className="col-span-2 flex gap-3 mt-1 text-xs font-mono">
-                        <span className="text-green-500">
-                          +{formatNumber(commit.additions)}
+        {repo.isPrivate && (
+          <p className="text-sm text-[#737373] mb-8" role="note">
+            Commit history is hidden for private repositories.
+          </p>
+        )}
+
+        {!repo.isPrivate && (
+          <section>
+            <h2 className="text-base font-bold text-white mb-3 md:text-lg md:mb-4">
+              Recent commits
+            </h2>
+            {recentCommits.length === 0 ? (
+              <div className="border border-[#262626] bg-[#171717]/30 rounded-lg py-10 md:py-12 text-center text-[#737373] text-sm">
+                No commits yet
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {recentCommits.map((commit) => (
+                  <a
+                    key={commit.commitUrl}
+                    href={commit.commitUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 bg-[#171717] border border-[#262626] hover:border-[#333] transition-colors rounded-lg touch-manipulation md:p-4"
+                  >
+                    <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 md:gap-x-3">
+                      <div className="col-span-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                        {commit.avatarUrl ? (
+                          <img
+                            src={commit.avatarUrl}
+                            alt=""
+                            className="w-6 h-6 rounded-full shrink-0"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-[#262626] shrink-0 flex items-center justify-center text-xs font-bold text-[#FFD800]">
+                            {commit.author[0]?.toUpperCase() ?? "?"}
+                          </div>
+                        )}
+                        <span className="font-medium text-white text-sm">
+                          {commit.author}
                         </span>
-                        <span className="text-red-500">
-                          −{formatNumber(commit.deletions)}
+                        <span className="text-xs text-[#737373]">
+                          {commit.time}
                         </span>
                       </div>
-                    )}
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-        </section>
+                      <p className="col-span-2 text-sm text-[#A3A3A3] line-clamp-2 min-w-0 mt-1">
+                        {commit.message}
+                      </p>
+                      {(commit.additions > 0 || commit.deletions > 0) && (
+                        <div className="col-span-2 flex gap-3 mt-1 text-xs font-mono">
+                          <span className="text-green-500">
+                            +{formatNumber(commit.additions)}
+                          </span>
+                          <span className="text-red-500">
+                            −{formatNumber(commit.deletions)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   );

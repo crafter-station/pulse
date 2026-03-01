@@ -28,25 +28,25 @@ export function Header() {
         </div>
         <nav className="hidden md:flex items-center gap-3 md:gap-6">
           <a
-            href="#activity"
+            href="/#activity"
             className="text-xs md:text-sm text-[#737373] hover:text-white transition-colors font-bold uppercase tracking-wider"
           >
             [Activity]
           </a>
           <a
-            href="#leaderboard"
+            href="/#leaderboard"
             className="text-xs md:text-sm text-[#737373] hover:text-white transition-colors font-bold uppercase tracking-wider"
           >
             [Leaderboard]
           </a>
           <a
-            href="#repositories"
+            href="/#repositories"
             className="text-xs md:text-sm text-[#737373] hover:text-white transition-colors font-bold uppercase tracking-wider"
           >
             [Repositories]
           </a>
           <a
-            href="#analytics"
+            href="/#analytics"
             className="text-xs md:text-sm text-[#737373] hover:text-white transition-colors font-bold uppercase tracking-wider"
           >
             [Analytics]
