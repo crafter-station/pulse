@@ -270,7 +270,7 @@ export function ActivityFeed() {
                         <span className="font-black text-white text-xs md:text-sm uppercase">
                           {item.author}
                         </span>
-                        <span className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs font-black bg-[#FFD800]/10 text-[#FFD800] border-2 border-[#FFD800]/20 font-mono uppercase">
+                        <span className={`px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs font-black bg-[#FFD800]/10 text-[#FFD800] border-2 border-[#FFD800]/20 font-mono uppercase ${item.isPrivate ? "blur-sm select-none" : ""}`}>
                           {item.repo}
                         </span>
                         {item.isPrivate && <PrivateBadge />}
@@ -344,7 +344,7 @@ export function ActivityFeed() {
                         <span className="text-[#737373] text-xs md:text-sm font-mono uppercase">
                           pushed to
                         </span>
-                        <span className="px-2 py-1 text-[10px] md:text-xs font-black bg-[#FFD800]/10 text-[#FFD800] border-2 border-[#FFD800]/20 font-mono uppercase">
+                        <span className={`px-2 py-1 text-[10px] md:text-xs font-black bg-[#FFD800]/10 text-[#FFD800] border-2 border-[#FFD800]/20 font-mono uppercase ${item.isPrivate ? "blur-sm select-none" : ""}`}>
                           {item.repo}
                         </span>
                         {item.isPrivate && <PrivateBadge />}
