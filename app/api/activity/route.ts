@@ -42,7 +42,9 @@ export async function GET(request: Request) {
 				.trim();
 
 			return {
-				repo: commit.repoName,
+				repo: isPrivate
+					? createHash("sha256").update(commit.repoName).digest("hex").slice(0, 16)
+					: commit.repoName,
 				author: commit.authorUsername,
 				avatarUrl: commit.authorAvatarUrl,
 				message: isPrivate
