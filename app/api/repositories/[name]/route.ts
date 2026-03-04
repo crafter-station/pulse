@@ -32,6 +32,10 @@ export async function GET(
 
 		const isPrivate = repo.isPrivate ?? false;
 
+		if (isPrivate) {
+			return NextResponse.json({ error: "Repository not found" }, { status: 404 });
+		}
+
 		const [recentCommits, topContributors] = await Promise.all([
 			isPrivate
 				? []

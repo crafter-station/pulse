@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { commits, repos } from "@/lib/db/schema";
 import { getPeruWeekStart } from "@/lib/utils/time";
+import { createHash } from "crypto";
 import { desc, eq, gte, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -76,11 +77,18 @@ export async function GET() {
 
 		const result = repoList.map((repo) => {
 			const stats = repoStats.get(repo.name);
+			const isPrivate = repo.isPrivate ?? false;
+			const name = isPrivate
+				? createHash("sha256").update(repo.name).digest("hex").slice(0, 16)
+				: repo.name;
+			const fullName = isPrivate
+				? createHash("sha256").update(repo.fullName).digest("hex").slice(0, 16)
+				: repo.fullName;
 			return {
-				name: repo.name,
-				fullName: repo.fullName,
+				name,
+				fullName,
 				lastPushAt: repo.lastPushAt,
-				isPrivate: repo.isPrivate ?? false,
+				isPrivate,
 				commitsThisWeek: stats?.commitsThisWeek ?? 0,
 				topContributorThisWeek: stats?.topContributor ?? null,
 			};
