@@ -88,7 +88,7 @@ export function Repositories() {
                 className="block p-4 md:p-5 bg-[#171717] border-2 border-[#333] hover:border-[#FFD800]/50 transition-colors group"
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <span className="font-display font-black text-white text-lg truncate group-hover:text-[#FFD800] transition-colors uppercase">
+                  <span className={`font-display font-black text-white text-lg truncate group-hover:text-[#FFD800] transition-colors uppercase ${repo.isPrivate ? "blur-sm select-none" : ""}`}>
                     {repo.name}
                   </span>
                   <div className="flex items-center gap-2 shrink-0">
