@@ -79,51 +79,66 @@ export async function POST(request: NextRequest) {
 				},
 			});
 
+		const commitStats = await Promise.all(
+			payload.commits.map(async (commit: any) => {
+				try {
+					const { data } = await octokit.repos.getCommit({
+						owner: repoOwner,
+						repo: repoName,
+						ref: commit.id,
+					});
+					return {
+						id: commit.id,
+						additions: data.stats?.additions || 0,
+						deletions: data.stats?.deletions || 0,
+						avatarUrl: data.author?.avatar_url || pusherAvatar,
+					};
+				} catch {
+					return { id: commit.id, additions: 0, deletions: 0, avatarUrl: pusherAvatar };
+				}
+			}),
+		);
+
+		const statsMap = new Map(commitStats.map((s) => [s.id, s]));
+
 		for (const commit of payload.commits) {
-			let additions = 0;
-			let deletions = 0;
-			let authorAvatarUrl = pusherAvatar;
+			const stats = statsMap.get(commit.id)!;
 
-			try {
-				const { data: commitDetails } = await octokit.repos.getCommit({
-					owner: repoOwner,
-					repo: repoName,
-					ref: commit.id,
+			await db
+				.insert(commits)
+				.values({
+					id: commit.id,
+					repoName,
+					authorUsername: commit.author.username || pusher,
+					authorAvatarUrl: stats.avatarUrl,
+					message: commit.message,
+					additions: stats.additions,
+					deletions: stats.deletions,
+					commitUrl: commit.url,
+					pushedAt: new Date(commit.timestamp),
+				})
+				.onConflictDoUpdate({
+					target: commits.id,
+					set: {
+						additions: stats.additions,
+						deletions: stats.deletions,
+						authorAvatarUrl: stats.avatarUrl,
+					},
 				});
-				additions = commitDetails.stats?.additions || 0;
-				deletions = commitDetails.stats?.deletions || 0;
-				authorAvatarUrl = commitDetails.author?.avatar_url || pusherAvatar;
-			} catch (error) {
-				console.error(`Failed to fetch stats for commit ${commit.id}:`, error);
-			}
-
-			const commitData = {
-				id: commit.id,
-				repoName,
-				authorUsername: commit.author.username || pusher,
-				authorAvatarUrl,
-				message: commit.message,
-				additions,
-				deletions,
-				commitUrl: commit.url,
-				pushedAt: new Date(commit.timestamp),
-			};
-
-			await db.insert(commits).values(commitData).onConflictDoNothing();
 
 			await db
 				.insert(contributors)
 				.values({
-					username: commitData.authorUsername,
-					avatarUrl: commitData.authorAvatarUrl,
+					username: commit.author.username || pusher,
+					avatarUrl: stats.avatarUrl,
 					totalCommits: 1,
-					lastCommitAt: commitData.pushedAt,
+					lastCommitAt: new Date(commit.timestamp),
 				})
 				.onConflictDoUpdate({
 					target: contributors.username,
 					set: {
 						totalCommits: sql`${contributors.totalCommits} + 1`,
-						lastCommitAt: commitData.pushedAt,
+						lastCommitAt: new Date(commit.timestamp),
 						updatedAt: new Date(),
 					},
 				});
