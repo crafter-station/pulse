@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
 
 		const repoName = payload.repository.name;
 		const fullRepoName = payload.repository.full_name;
+		const repoOwner = fullRepoName.split("/")[0];
 		const isPrivate = Boolean(payload.repository?.private);
 		const pusher = payload.pusher.name;
 		const pusherAvatar = payload.sender.avatar_url;
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
 
 			try {
 				const { data: commitDetails } = await octokit.repos.getCommit({
-					owner: payload.repository.owner.login || payload.repository.owner.name,
+					owner: repoOwner,
 					repo: repoName,
 					ref: commit.id,
 				});
