@@ -1,5 +1,6 @@
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { Analytics } from "@/components/Analytics";
+import { Distribution } from "@/components/Distribution";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
@@ -14,6 +15,7 @@ export default function Home() {
       <main>
         <Hero />
         <Stats />
+        <Distribution />
         <ActivityFeed />
         <Leaderboard />
         <Repositories />

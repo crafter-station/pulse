@@ -29,6 +29,12 @@ export function Header() {
         </div>
         <nav className="hidden md:flex items-center gap-3 md:gap-6">
           <a
+            href="/#distribution"
+            className="text-xs md:text-sm text-[#737373] hover:text-white transition-colors font-bold uppercase tracking-wider"
+          >
+            [Distribution]
+          </a>
+          <a
             href="/#activity"
             className="text-xs md:text-sm text-[#737373] hover:text-white transition-colors font-bold uppercase tracking-wider"
           >
