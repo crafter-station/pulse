@@ -1,12 +1,16 @@
+import { and, gte, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits } from "@/lib/db/schema";
-import { sql, gte } from "drizzle-orm";
+import { orgIdCondition, resolveOrgFromRequest } from "@/lib/org-filter";
 
-export async function GET() {
+export async function GET(request: Request) {
 	try {
+		const org = await resolveOrgFromRequest(request);
+		const orgFilter = orgIdCondition(commits.orgId, org?.id ?? null);
+
 		// Start from January 1, 2026
-		const startDate = new Date(2026, 0, 1); // Month is 0-indexed
+		const startDate = new Date(2026, 0, 1);
 
 		const dailyCommits = await db
 			.select({
@@ -14,7 +18,7 @@ export async function GET() {
 				count: sql<number>`count(*)::int`,
 			})
 			.from(commits)
-			.where(gte(commits.pushedAt, startDate))
+			.where(and(gte(commits.pushedAt, startDate), orgFilter))
 			.groupBy(sql`date(${commits.pushedAt})`)
 			.orderBy(sql`date(${commits.pushedAt})`);
 
@@ -24,9 +28,7 @@ export async function GET() {
 		});
 
 		const allDates: Array<{ date: string; count: number }> = [];
-
-		// Fill all dates for the entire year 2026 (365 days)
-		const endDate = new Date(2026, 11, 31); // December 31, 2026
+		const endDate = new Date(2026, 11, 31);
 		const currentDate = new Date(startDate);
 		while (currentDate <= endDate) {
 			const dateStr = currentDate.toISOString().split("T")[0];
@@ -40,6 +42,9 @@ export async function GET() {
 		return NextResponse.json(allDates);
 	} catch (error) {
 		console.error("Heatmap API error:", error);
-		return NextResponse.json({ error: "Failed to fetch heatmap" }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Failed to fetch heatmap" },
+			{ status: 500 },
+		);
 	}
 }

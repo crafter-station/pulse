@@ -1,19 +1,24 @@
+import { createHash } from "crypto";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits, repos } from "@/lib/db/schema";
+import { orgIdCondition, resolveOrgFromRequest } from "@/lib/org-filter";
 import { getPeruWeekStart } from "@/lib/utils/time";
-import { createHash } from "crypto";
-import { desc, eq, gte, sql } from "drizzle-orm";
-import { NextResponse } from "next/server";
 
 const MAX_REPOS = 12;
 
 /**
- * GET /api/repositories
+ * GET /api/repositories?org=<slug|all>
  * List the most recently active repositories (by last push), with commits this week and top contributor.
  */
-export async function GET() {
+export async function GET(request: Request) {
 	try {
 		const weekStart = getPeruWeekStart();
+
+		const org = await resolveOrgFromRequest(request);
+		const reposOrgFilter = orgIdCondition(repos.orgId, org?.id ?? null);
+		const commitsOrgFilter = orgIdCondition(commits.orgId, org?.id ?? null);
 
 		const repoList = await db
 			.select({
@@ -21,38 +26,51 @@ export async function GET() {
 				fullName: repos.fullName,
 				lastPushAt: repos.lastPushAt,
 				isPrivate: repos.isPrivate,
+				orgId: repos.orgId,
 			})
 			.from(repos)
-			.where(eq(repos.isActive, true))
+			.where(and(eq(repos.isActive, true), reposOrgFilter))
 			.orderBy(desc(repos.lastPushAt))
 			.limit(MAX_REPOS);
 
-		// Commits this week per repo per author (for count + top contributor)
-		// Order by repo, then count desc so per-repo "top" is deterministic (tie-break: most commits, then first by name)
 		const commitsThisWeek = await db
 			.select({
 				repoName: commits.repoName,
+				orgId: commits.orgId,
 				authorUsername: commits.authorUsername,
 				authorAvatarUrl: commits.authorAvatarUrl,
 				commits: sql<number>`count(*)::int`,
 			})
 			.from(commits)
-			.where(gte(commits.pushedAt, weekStart))
-			.groupBy(commits.repoName, commits.authorUsername, commits.authorAvatarUrl)
+			.where(and(gte(commits.pushedAt, weekStart), commitsOrgFilter))
+			.groupBy(
+				commits.repoName,
+				commits.orgId,
+				commits.authorUsername,
+				commits.authorAvatarUrl,
+			)
 			.orderBy(commits.repoName, desc(sql`count(*)`), commits.authorUsername);
 
-		// Aggregate: total commits per repo + top author per repo
+		// Key by `orgId:repoName` to avoid colliding same-name repos across orgs
 		const repoStats = new Map<
 			string,
-			{ commitsThisWeek: number; topContributor: { username: string; avatarUrl: string | null; commits: number } | null }
+			{
+				commitsThisWeek: number;
+				topContributor: {
+					username: string;
+					avatarUrl: string | null;
+					commits: number;
+				} | null;
+			}
 		>();
 
 		for (const row of commitsThisWeek) {
-			const existing = repoStats.get(row.repoName);
+			const key = `${row.orgId ?? 0}:${row.repoName}`;
+			const existing = repoStats.get(key);
 			const authorCommits = row.commits;
 
 			if (!existing) {
-				repoStats.set(row.repoName, {
+				repoStats.set(key, {
 					commitsThisWeek: authorCommits,
 					topContributor: {
 						username: row.authorUsername,
@@ -76,7 +94,7 @@ export async function GET() {
 		}
 
 		const result = repoList.map((repo) => {
-			const stats = repoStats.get(repo.name);
+			const stats = repoStats.get(`${repo.orgId ?? 0}:${repo.name}`);
 			const isPrivate = repo.isPrivate ?? false;
 			const name = isPrivate
 				? createHash("sha256").update(repo.name).digest("hex").slice(0, 16)
@@ -101,6 +119,9 @@ export async function GET() {
 		});
 	} catch (error) {
 		console.error("Repositories API error:", error);
-		return NextResponse.json({ error: "Failed to fetch repositories" }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Failed to fetch repositories" },
+			{ status: 500 },
+		);
 	}
 }

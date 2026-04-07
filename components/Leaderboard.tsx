@@ -1,7 +1,8 @@
 "use client";
 
-import { formatNumber } from "@/lib/utils/format";
 import { useEffect, useState } from "react";
+import { useOrgParam, withOrg } from "@/lib/useOrgParam";
+import { formatNumber } from "@/lib/utils/format";
 
 interface LeaderboardMember {
   name: string;
@@ -25,11 +26,12 @@ export function Leaderboard() {
     year: number;
     week: number;
   } | null>(null);
+  const org = useOrgParam();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const res = await fetch("/api/leaderboard");
+        const res = await fetch(withOrg("/api/leaderboard", org));
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         setLeaderboard(data);
@@ -42,7 +44,7 @@ export function Leaderboard() {
 
     const fetchStats = async () => {
       try {
-        const res = await fetch("/api/stats");
+        const res = await fetch(withOrg("/api/stats", org));
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         if (data.currentWeek) {
@@ -61,7 +63,7 @@ export function Leaderboard() {
       fetchStats();
     }, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [org]);
 
   return (
     <section

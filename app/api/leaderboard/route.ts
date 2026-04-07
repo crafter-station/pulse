@@ -1,11 +1,15 @@
+import { and, desc, gte, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits } from "@/lib/db/schema";
-import { sql, gte, desc } from "drizzle-orm";
+import { orgIdCondition, resolveOrgFromRequest } from "@/lib/org-filter";
 import { getPeruWeekStart } from "@/lib/utils/time";
 
-export async function GET() {
+export async function GET(request: Request) {
 	try {
+		const org = await resolveOrgFromRequest(request);
+		const orgFilter = orgIdCondition(commits.orgId, org?.id ?? null);
+
 		const weekStart = getPeruWeekStart();
 
 		const leaderboard = await db
@@ -17,7 +21,7 @@ export async function GET() {
 				deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
 			})
 			.from(commits)
-			.where(gte(commits.pushedAt, weekStart))
+			.where(and(gte(commits.pushedAt, weekStart), orgFilter))
 			.groupBy(commits.authorUsername, commits.authorAvatarUrl)
 			.orderBy(desc(sql`count(*)`))
 			.limit(10);
@@ -33,6 +37,9 @@ export async function GET() {
 		return NextResponse.json(formatted);
 	} catch (error) {
 		console.error("Leaderboard API error:", error);
-		return NextResponse.json({ error: "Failed to fetch leaderboard" }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Failed to fetch leaderboard" },
+			{ status: 500 },
+		);
 	}
 }

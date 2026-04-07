@@ -1,10 +1,11 @@
 "use client";
 
-import { PrivateBadge } from "@/components/PrivateBadge";
-import { formatNumber } from "@/lib/utils/format";
-import { formatRelativeTime } from "@/lib/utils/time";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { PrivateBadge } from "@/components/PrivateBadge";
+import { useOrgParam, withOrg } from "@/lib/useOrgParam";
+import { formatNumber } from "@/lib/utils/format";
+import { formatRelativeTime } from "@/lib/utils/time";
 
 interface RepoItem {
   name: string;
@@ -22,11 +23,12 @@ interface RepoItem {
 export function Repositories() {
   const [repos, setRepos] = useState<RepoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const org = useOrgParam();
 
   useEffect(() => {
     const fetchRepos = async () => {
       try {
-        const res = await fetch("/api/repositories");
+        const res = await fetch(withOrg("/api/repositories", org));
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
         setRepos(data);
@@ -40,7 +42,7 @@ export function Repositories() {
     fetchRepos();
     const interval = setInterval(fetchRepos, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [org]);
 
   return (
     <section

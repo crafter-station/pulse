@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useOrgParam, withOrg } from "@/lib/useOrgParam";
 import { formatNumber } from "@/lib/utils/format";
 import { Heatmap } from "./Heatmap";
 
@@ -33,11 +34,12 @@ export function Stats() {
 		activeContributors: 0,
 	});
 	const [loading, setLoading] = useState(true);
+	const org = useOrgParam();
 
 	useEffect(() => {
 		const fetchStats = async () => {
 			try {
-				const res = await fetch("/api/stats");
+				const res = await fetch(withOrg("/api/stats", org));
 				if (!res.ok) throw new Error("Failed to fetch");
 				const data = await res.json();
 				setStats(data);
@@ -52,7 +54,7 @@ export function Stats() {
 
 		const interval = setInterval(fetchStats, 60000);
 		return () => clearInterval(interval);
-	}, []);
+	}, [org]);
 
 	return (
 		<section className="py-12 md:py-16 px-4 md:px-6">

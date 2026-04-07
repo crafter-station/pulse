@@ -1,8 +1,9 @@
+import { and, gte, lt, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { commits } from "@/lib/db/schema"; // analytics endpoint
-import { sql, gte, and, lt } from "drizzle-orm";
-import { getPeruWeekStart, PERU_UTC_OFFSET } from "@/lib/utils/time";
+import { commits } from "@/lib/db/schema";
+import { orgIdCondition, resolveOrgFromRequest } from "@/lib/org-filter";
+import { PERU_UTC_OFFSET, getPeruWeekStart } from "@/lib/utils/time";
 
 function getPeruPrevWeekStart(): Date {
 	const weekStart = getPeruWeekStart();
@@ -14,8 +15,13 @@ function pctChange(current: number, previous: number): number {
 	return Math.round(((current - previous) / previous) * 100);
 }
 
-export async function GET() {
+export async function GET(request: Request) {
 	try {
+		const org = await resolveOrgFromRequest(request);
+		const orgId = org?.id ?? null;
+		const orgFilter = orgIdCondition(commits.orgId, orgId);
+		const orgIdLiteral = orgId;
+
 		const weekStart = getPeruWeekStart();
 		const prevWeekStart = getPeruPrevWeekStart();
 
@@ -49,7 +55,7 @@ export async function GET() {
 					contributors: sql<number>`count(distinct ${commits.authorUsername})::int`,
 				})
 				.from(commits)
-				.where(gte(commits.pushedAt, weekStart))
+				.where(and(gte(commits.pushedAt, weekStart), orgFilter))
 				.then((r) => r[0]),
 
 			// Previous week stats
@@ -61,7 +67,13 @@ export async function GET() {
 					contributors: sql<number>`count(distinct ${commits.authorUsername})::int`,
 				})
 				.from(commits)
-				.where(and(gte(commits.pushedAt, prevWeekStart), lt(commits.pushedAt, weekStart)))
+				.where(
+					and(
+						gte(commits.pushedAt, prevWeekStart),
+						lt(commits.pushedAt, weekStart),
+						orgFilter,
+					),
+				)
 				.then((r) => r[0]),
 
 			// Current 30 days
@@ -72,7 +84,7 @@ export async function GET() {
 					deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
 				})
 				.from(commits)
-				.where(gte(commits.pushedAt, thirtyDaysAgo))
+				.where(and(gte(commits.pushedAt, thirtyDaysAgo), orgFilter))
 				.then((r) => r[0]),
 
 			// Previous 30 days
@@ -83,7 +95,13 @@ export async function GET() {
 					deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
 				})
 				.from(commits)
-				.where(and(gte(commits.pushedAt, sixtyDaysAgo), lt(commits.pushedAt, thirtyDaysAgo)))
+				.where(
+					and(
+						gte(commits.pushedAt, sixtyDaysAgo),
+						lt(commits.pushedAt, thirtyDaysAgo),
+						orgFilter,
+					),
+				)
 				.then((r) => r[0]),
 
 			// YTD totals
@@ -94,7 +112,7 @@ export async function GET() {
 					deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
 				})
 				.from(commits)
-				.where(gte(commits.pushedAt, ytdStart))
+				.where(and(gte(commits.pushedAt, ytdStart), orgFilter))
 				.then((r) => r[0]),
 
 			// Weekly chart data: last 12 weeks
@@ -105,9 +123,12 @@ export async function GET() {
 				})
 				.from(commits)
 				.where(
-					gte(
-						commits.pushedAt,
-						new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000),
+					and(
+						gte(
+							commits.pushedAt,
+							new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000),
+						),
+						orgFilter,
 					),
 				)
 				.groupBy(
@@ -123,7 +144,7 @@ export async function GET() {
 					count: sql<number>`count(distinct ${commits.authorUsername})::int`,
 				})
 				.from(commits)
-				.where(gte(commits.pushedAt, weekStart))
+				.where(and(gte(commits.pushedAt, weekStart), orgFilter))
 				.then((r) => r[0]),
 
 			// Previous week contributors (distinct)
@@ -132,7 +153,13 @@ export async function GET() {
 					count: sql<number>`count(distinct ${commits.authorUsername})::int`,
 				})
 				.from(commits)
-				.where(and(gte(commits.pushedAt, prevWeekStart), lt(commits.pushedAt, weekStart)))
+				.where(
+					and(
+						gte(commits.pushedAt, prevWeekStart),
+						lt(commits.pushedAt, weekStart),
+						orgFilter,
+					),
+				)
 				.then((r) => r[0]),
 
 			// New contributors this month (first commit in the last 30 days)
@@ -141,10 +168,13 @@ export async function GET() {
 					sql`SELECT count(*)::int as count FROM (
 						SELECT ${commits.authorUsername}, min(${commits.pushedAt}) as first_commit
 						FROM ${commits}
+						WHERE (${orgIdLiteral}::int IS NULL OR org_id = ${orgIdLiteral}::int)
 						GROUP BY ${commits.authorUsername}
 					) sub WHERE sub.first_commit >= ${thirtyDaysAgo}`,
 				)
-				.then((r) => ({ count: Number((r.rows[0] as { count: number })?.count ?? 0) })),
+				.then((r) => ({
+					count: Number((r.rows[0] as { count: number })?.count ?? 0),
+				})),
 
 			// Top 3 growing repos by WoW commit increase
 			db.execute(sql`
@@ -152,12 +182,14 @@ export async function GET() {
 					SELECT repo_name, count(*)::int as commits
 					FROM commits
 					WHERE pushed_at >= ${weekStart}
+						AND (${orgIdLiteral}::int IS NULL OR org_id = ${orgIdLiteral}::int)
 					GROUP BY repo_name
 				),
 				prev_week AS (
 					SELECT repo_name, count(*)::int as commits
 					FROM commits
 					WHERE pushed_at >= ${prevWeekStart} AND pushed_at < ${weekStart}
+						AND (${orgIdLiteral}::int IS NULL OR org_id = ${orgIdLiteral}::int)
 					GROUP BY repo_name
 				)
 				SELECT
@@ -178,7 +210,7 @@ export async function GET() {
 					commits: sql<number>`count(*)::int`,
 				})
 				.from(commits)
-				.where(gte(commits.pushedAt, ytdStart))
+				.where(and(gte(commits.pushedAt, ytdStart), orgFilter))
 				.groupBy(
 					sql`date_trunc('month', ${commits.pushedAt} AT TIME ZONE 'America/Lima')`,
 				)
@@ -227,6 +259,7 @@ export async function GET() {
 		});
 
 		return NextResponse.json({
+			org: org?.slug ?? "all",
 			wow: {
 				commits: {
 					current: currentWeekStats.commits || 0,

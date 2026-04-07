@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useOrgParam, withOrg } from "@/lib/useOrgParam";
 
 interface HeatmapDay {
   date: string;
@@ -10,11 +11,12 @@ interface HeatmapDay {
 export function Heatmap() {
   const [data, setData] = useState<HeatmapDay[]>([]);
   const [loading, setLoading] = useState(true);
+  const org = useOrgParam();
 
   useEffect(() => {
     const fetchHeatmap = async () => {
       try {
-        const res = await fetch("/api/heatmap");
+        const res = await fetch(withOrg("/api/heatmap", org));
         if (!res.ok) throw new Error("Failed to fetch");
         const heatmapData = await res.json();
         setData(heatmapData);
@@ -29,7 +31,7 @@ export function Heatmap() {
 
     const interval = setInterval(fetchHeatmap, 300000);
     return () => clearInterval(interval);
-  }, []);
+  }, [org]);
 
   const getIntensity = (count: number): string => {
     if (count === 0) return "bg-[#0A0A0A] border-[#262626]";

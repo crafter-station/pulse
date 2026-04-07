@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
 import {
-	BarChart,
-	Bar,
-	XAxis,
-	ResponsiveContainer,
-	Cell,
-} from "recharts";
-import { motion, AnimatePresence } from "motion/react";
-import { TrendingUp, TrendingDown, Users, GitCommit, Flame, Info } from "lucide-react";
+	Flame,
+	GitCommit,
+	Info,
+	TrendingDown,
+	TrendingUp,
+	Users,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Bar, BarChart, Cell, ResponsiveContainer, XAxis } from "recharts";
+import { useOrgParam, withOrg } from "@/lib/useOrgParam";
 import { formatNumber } from "@/lib/utils/format";
 
 interface MetricChange {
@@ -243,11 +245,12 @@ function WeeklyBarChart({
 export function Analytics() {
 	const [data, setData] = useState<AnalyticsData | null>(null);
 	const [loading, setLoading] = useState(true);
+	const org = useOrgParam();
 
 	useEffect(() => {
 		const fetchAnalytics = async () => {
 			try {
-				const res = await fetch("/api/analytics");
+				const res = await fetch(withOrg("/api/analytics", org));
 				if (!res.ok) throw new Error("Failed to fetch");
 				const json = await res.json();
 				setData(json);
@@ -261,7 +264,7 @@ export function Analytics() {
 		fetchAnalytics();
 		const interval = setInterval(fetchAnalytics, 60000);
 		return () => clearInterval(interval);
-	}, []);
+	}, [org]);
 
 	const placeholder = "---";
 

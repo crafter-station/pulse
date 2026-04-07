@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CrafterStationLogo } from "./icons/CrafterStationLogo";
 import { GitHubLogo } from "./icons/GitHubLogo";
 import { MobileMenu } from "./MobileMenu";
+import { OrgSelector } from "./OrgSelector";
 
 const MENU_ID = "mobile-menu";
 
@@ -52,6 +53,8 @@ export function Header() {
             [Analytics]
           </a>
 
+          <OrgSelector />
+
           <a
             href="https://github.com/crafter-station"
             target="_blank"
@@ -59,7 +62,7 @@ export function Header() {
             className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 text-xs md:text-sm font-bold bg-[#171717] border-2 border-[#333] text-white hover:border-[#FFD800]/50 transition-all uppercase tracking-wider"
           >
             <GitHubLogo className="w-4 h-4 shrink-0" />
-            crafter-station
+            crafter
           </a>
         </nav>
 

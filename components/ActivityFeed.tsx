@@ -1,6 +1,7 @@
 "use client";
 
 import { PrivateBadge } from "@/components/PrivateBadge";
+import { useOrgParam, withOrg } from "@/lib/useOrgParam";
 import { formatNumber } from "@/lib/utils/format";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -32,26 +33,30 @@ export function ActivityFeed() {
   const [selectedAuthor, setSelectedAuthor] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const org = useOrgParam();
 
-  const fetchActivity = useCallback(async (offset = 0, append = false) => {
-    try {
-      if (append) setLoadingMore(true);
-      const res = await fetch(
-        `/api/activity?offset=${offset}&limit=${PAGE_SIZE}`,
-      );
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      setActivity((prev) => (append ? [...prev, ...data.items] : data.items));
-      setHasMore(data.hasMore);
-      setError(false);
-    } catch (err) {
-      console.error("Error fetching activity:", err);
-      if (!append) setError(true);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, []);
+  const fetchActivity = useCallback(
+    async (offset = 0, append = false) => {
+      try {
+        if (append) setLoadingMore(true);
+        const res = await fetch(
+          withOrg(`/api/activity?offset=${offset}&limit=${PAGE_SIZE}`, org),
+        );
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setActivity((prev) => (append ? [...prev, ...data.items] : data.items));
+        setHasMore(data.hasMore);
+        setError(false);
+      } catch (err) {
+        console.error("Error fetching activity:", err);
+        if (!append) setError(true);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [org],
+  );
 
   useEffect(() => {
     fetchActivity();
