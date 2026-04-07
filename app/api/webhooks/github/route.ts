@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { Webhooks } from "@octokit/webhooks";
 import { Octokit } from "@octokit/rest";
+import { Webhooks } from "@octokit/webhooks";
+import { and, eq, sql } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { commits, repos, contributors } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { commits, contributors, repos } from "@/lib/db/schema";
+import { getOrgByGithubName } from "@/lib/orgs";
 
 const webhooks = new Webhooks({
 	secret: process.env.GITHUB_WEBHOOK_SECRET || "",
@@ -32,16 +33,35 @@ export async function POST(request: NextRequest) {
 			const payload = JSON.parse(body);
 			if (payload.action === "publicized" || payload.action === "privatized") {
 				const repoName = payload.repository.name;
+				const ownerLogin =
+					payload.repository.full_name?.split("/")[0] ||
+					payload.organization?.login ||
+					payload.sender?.login;
+				const org = ownerLogin ? await getOrgByGithubName(ownerLogin) : null;
+				if (!org) {
+					return NextResponse.json(
+						{ message: `Org ${ownerLogin} not registered, ignored` },
+						{ status: 200 },
+					);
+				}
 				const isPrivate = payload.action === "privatized";
 
 				await db
 					.update(repos)
 					.set({ isPrivate, updatedAt: new Date() })
-					.where(eq(repos.name, repoName));
+					.where(and(eq(repos.orgId, org.id), eq(repos.name, repoName)));
 
-				return NextResponse.json({ message: `Repository visibility updated to ${isPrivate ? "private" : "public"}` }, { status: 200 });
+				return NextResponse.json(
+					{
+						message: `Repository visibility updated to ${isPrivate ? "private" : "public"}`,
+					},
+					{ status: 200 },
+				);
 			}
-			return NextResponse.json({ message: "Repository event ignored" }, { status: 200 });
+			return NextResponse.json(
+				{ message: "Repository event ignored" },
+				{ status: 200 },
+			);
 		}
 
 		if (event !== "push") {
@@ -51,7 +71,10 @@ export async function POST(request: NextRequest) {
 		const payload = JSON.parse(body);
 
 		if (payload.ref !== "refs/heads/main") {
-			return NextResponse.json({ message: "Non-main branch, ignored" }, { status: 200 });
+			return NextResponse.json(
+				{ message: "Non-main branch, ignored" },
+				{ status: 200 },
+			);
 		}
 
 		const repoName = payload.repository.name;
@@ -61,9 +84,19 @@ export async function POST(request: NextRequest) {
 		const pusher = payload.pusher.name;
 		const pusherAvatar = payload.sender.avatar_url;
 
+		const org = await getOrgByGithubName(repoOwner);
+		if (!org) {
+			console.warn(`[webhook] rejected unknown org: ${repoOwner}`);
+			return NextResponse.json(
+				{ message: `Org ${repoOwner} not registered, ignored` },
+				{ status: 200 },
+			);
+		}
+
 		await db
 			.insert(repos)
 			.values({
+				orgId: org.id,
 				name: repoName,
 				fullName: fullRepoName,
 				isPrivate,
@@ -71,7 +104,7 @@ export async function POST(request: NextRequest) {
 				updatedAt: new Date(),
 			})
 			.onConflictDoUpdate({
-				target: repos.name,
+				target: [repos.orgId, repos.name],
 				set: {
 					isPrivate,
 					lastPushAt: new Date(),
@@ -80,7 +113,7 @@ export async function POST(request: NextRequest) {
 			});
 
 		const commitStats = await Promise.all(
-			payload.commits.map(async (commit: any) => {
+			payload.commits.map(async (commit: { id: string }) => {
 				try {
 					const { data } = await octokit.repos.getCommit({
 						owner: repoOwner,
@@ -94,7 +127,12 @@ export async function POST(request: NextRequest) {
 						avatarUrl: data.author?.avatar_url || pusherAvatar,
 					};
 				} catch {
-					return { id: commit.id, additions: 0, deletions: 0, avatarUrl: pusherAvatar };
+					return {
+						id: commit.id,
+						additions: 0,
+						deletions: 0,
+						avatarUrl: pusherAvatar,
+					};
 				}
 			}),
 		);
@@ -102,12 +140,14 @@ export async function POST(request: NextRequest) {
 		const statsMap = new Map(commitStats.map((s) => [s.id, s]));
 
 		for (const commit of payload.commits) {
-			const stats = statsMap.get(commit.id)!;
+			const stats = statsMap.get(commit.id);
+			if (!stats) continue;
 
 			await db
 				.insert(commits)
 				.values({
 					id: commit.id,
+					orgId: org.id,
 					repoName,
 					authorUsername: commit.author.username || pusher,
 					authorAvatarUrl: stats.avatarUrl,
@@ -120,6 +160,7 @@ export async function POST(request: NextRequest) {
 				.onConflictDoUpdate({
 					target: commits.id,
 					set: {
+						orgId: org.id,
 						additions: stats.additions,
 						deletions: stats.deletions,
 						authorAvatarUrl: stats.avatarUrl,
@@ -144,9 +185,15 @@ export async function POST(request: NextRequest) {
 				});
 		}
 
-		return NextResponse.json({ message: "Webhook processed successfully" }, { status: 200 });
+		return NextResponse.json(
+			{ message: "Webhook processed successfully" },
+			{ status: 200 },
+		);
 	} catch (error) {
 		console.error("Webhook error:", error);
-		return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }
