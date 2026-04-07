@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { CrafterStationLogo } from "./icons/CrafterStationLogo";
 import { GitHubLogo } from "./icons/GitHubLogo";
 import { MobileMenu } from "./MobileMenu";
@@ -59,7 +59,9 @@ export function Header() {
             [Analytics]
           </a>
 
-          <OrgSelector />
+          <Suspense fallback={null}>
+            <OrgSelector />
+          </Suspense>
 
           <a
             href="https://github.com/crafter-station"

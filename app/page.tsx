@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { Analytics } from "@/components/Analytics";
 import { Distribution } from "@/components/Distribution";
@@ -14,12 +15,14 @@ export default function Home() {
       <Header />
       <main>
         <Hero />
-        <Stats />
-        <Distribution />
-        <ActivityFeed />
-        <Leaderboard />
-        <Repositories />
-        <Analytics />
+        <Suspense fallback={null}>
+          <Stats />
+          <Distribution />
+          <ActivityFeed />
+          <Leaderboard />
+          <Repositories />
+          <Analytics />
+        </Suspense>
       </main>
       <Footer />
     </div>
