@@ -68,7 +68,20 @@ This fetches the last 30 days of commits from all crafter-station repos.
 bun dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000)
+`bun dev` runs next through [portless](https://github.com/vercel-labs/portless),
+so the app is always available at a stable URL — no port juggling when
+other dev servers are running:
+
+[https://pulse.localhost](https://pulse.localhost)
+
+If the portless proxy is not running yet:
+
+```bash
+portless proxy start       # HTTPS on :443 (needs sudo on first run)
+portless proxy start -p 1355  # or without sudo on a custom port
+```
+
+To run next directly (bypassing portless) use `bun dev:raw`.
 
 ## Deployment
 
