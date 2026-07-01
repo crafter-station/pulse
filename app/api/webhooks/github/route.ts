@@ -15,6 +15,12 @@ const octokit = new Octokit({
 
 export async function POST(request: NextRequest) {
 	try {
+		// Fail closed: never verify against an empty secret.
+		if (!process.env.GITHUB_WEBHOOK_SECRET) {
+			console.error("GITHUB_WEBHOOK_SECRET is not configured");
+			return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+		}
+
 		const body = await request.text();
 		const signature = request.headers.get("x-hub-signature-256");
 		const event = request.headers.get("x-github-event");
@@ -40,6 +46,7 @@ export async function POST(request: NextRequest) {
 
 		const repoName = payload.repository.name;
 		const fullRepoName = payload.repository.full_name;
+		const isPrivate = payload.repository.private as boolean;
 		const pusher = payload.pusher.name;
 		const pusherAvatar = payload.sender.avatar_url;
 
@@ -48,12 +55,14 @@ export async function POST(request: NextRequest) {
 			.values({
 				name: repoName,
 				fullName: fullRepoName,
+				isPrivate,
 				lastPushAt: new Date(),
 				updatedAt: new Date(),
 			})
 			.onConflictDoUpdate({
 				target: repos.name,
 				set: {
+					isPrivate,
 					lastPushAt: new Date(),
 					updatedAt: new Date(),
 				},

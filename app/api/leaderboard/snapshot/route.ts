@@ -6,9 +6,16 @@ import { getPeruWeekStart, getPeruISOWeek } from "@/lib/utils/time";
 
 /**
  * POST /api/leaderboard/snapshot
- * Save current week's leaderboard to history
+ * Save current week's leaderboard to history.
+ * Protected: requires `Authorization: Bearer $CRON_SECRET` (fail-closed —
+ * if CRON_SECRET is unset, every request is rejected). Vercel Cron sends this
+ * header automatically when CRON_SECRET is configured.
  */
-export async function POST() {
+export async function POST(request: Request) {
+	const cronSecret = process.env.CRON_SECRET;
+	if (!cronSecret || request.headers.get("authorization") !== `Bearer ${cronSecret}`) {
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
 	try {
 		const weekStart = getPeruWeekStart();
 		const { year, week } = getPeruISOWeek();
