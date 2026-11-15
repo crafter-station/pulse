@@ -55,11 +55,10 @@ Next.js 16 with React 19 Server Components, Neon Postgres with Drizzle, and [ui-
 
 ```bash
 bun install
-vercel env pull .env.local    # DATABASE_URL, GITHUB_TOKEN, GITHUB_WEBHOOK_SECRET, CRON_SECRET
-bun dev                       # https://pulse.localhost via portless
+bun dev    # https://pulse.localhost via portless
 ```
 
-Point `DATABASE_URL` at a Neon branch, not production, while developing (`neonctl branches create --project-id <id> --parent production`).
+`.env.local` needs `DATABASE_URL`, `GITHUB_TOKEN`, `GITHUB_WEBHOOK_SECRET` and `CRON_SECRET`. The Vercel development environment only has `CRON_SECRET`. Point `DATABASE_URL` at a Neon branch, not production (`neonctl branches create --project-id <id> --parent production`, then `neonctl connection-string <branch> --pooled`).
 
 ## Scripts
 
