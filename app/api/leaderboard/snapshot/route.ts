@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { commits, weeklyLeaderboards } from "@/lib/db/schema";
-import { sql, gte } from "drizzle-orm";
+import { weeklyLeaderboards } from "@/lib/db/schema";
+import { getTeamLeaderboard } from "@/lib/team-leaderboard";
 import { getPeruWeekStart, getPeruISOWeek } from "@/lib/utils/time";
 
 /**
@@ -13,20 +13,9 @@ export async function POST() {
 		const weekStart = getPeruWeekStart();
 		const { year, week } = getPeruISOWeek();
 
-		// Get current week's leaderboard
-		const leaderboard = await db
-			.select({
-				username: commits.authorUsername,
-				avatarUrl: commits.authorAvatarUrl,
-				commits: sql<number>`count(*)::int`,
-				additions: sql<number>`coalesce(sum(${commits.additions}), 0)::int`,
-				deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
-			})
-			.from(commits)
-			.where(gte(commits.pushedAt, weekStart))
-			.groupBy(commits.authorUsername, commits.authorAvatarUrl)
-			.orderBy(sql`count(*) desc`)
-			.limit(10);
+		const leaderboard = (await getTeamLeaderboard(weekStart, null)).filter(
+			(member) => member.commits > 0,
+		);
 
 		if (leaderboard.length === 0) {
 			return NextResponse.json({ message: "No commits this week" }, { status: 200 });
@@ -36,7 +25,7 @@ export async function POST() {
 		const snapshots = leaderboard.map((member, index) => ({
 			year,
 			week,
-			username: member.username,
+			username: member.login,
 			avatarUrl: member.avatarUrl,
 			commits: member.commits,
 			additions: member.additions,

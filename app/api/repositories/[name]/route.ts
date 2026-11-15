@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { commits, repos } from "@/lib/db/schema";
 import { formatRelativeTime } from "@/lib/utils/time";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { countedCommits, visibleAuthor } from "@/lib/roster";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -42,7 +43,13 @@ export async function GET(
 				: db
 						.select()
 						.from(commits)
-						.where(eq(commits.repoName, repoName))
+						.where(
+					and(
+						eq(commits.repoName, repoName),
+						countedCommits(null),
+						visibleAuthor(),
+					),
+				)
 						.orderBy(desc(commits.pushedAt))
 						.limit(30),
 			db
@@ -54,7 +61,13 @@ export async function GET(
 					deletions: sql<number>`coalesce(sum(${commits.deletions}), 0)::int`,
 				})
 				.from(commits)
-				.where(eq(commits.repoName, repoName))
+				.where(
+					and(
+						eq(commits.repoName, repoName),
+						countedCommits(null),
+						visibleAuthor(),
+					),
+				)
 				.groupBy(commits.authorUsername)
 				.orderBy(desc(sql`count(*)`))
 				.limit(10),

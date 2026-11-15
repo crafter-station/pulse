@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits, repos } from "@/lib/db/schema";
 import { orgIdCondition, resolveOrgFromRequest } from "@/lib/org-filter";
+import { countedCommits, visibleAuthor } from "@/lib/roster";
 import { getPeruWeekStart } from "@/lib/utils/time";
 
 const MAX_REPOS = 12;
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
 
 		const org = await resolveOrgFromRequest(request);
 		const reposOrgFilter = orgIdCondition(repos.orgId, org?.id ?? null);
-		const commitsOrgFilter = orgIdCondition(commits.orgId, org?.id ?? null);
+		const commitsOrgFilter = and(countedCommits(org?.id ?? null), visibleAuthor());
 
 		const repoList = await db
 			.select({

@@ -2,12 +2,13 @@ import { and, gte, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits } from "@/lib/db/schema";
-import { orgIdCondition, resolveOrgFromRequest } from "@/lib/org-filter";
+import { resolveOrgFromRequest } from "@/lib/org-filter";
+import { countedCommits } from "@/lib/roster";
 
 export async function GET(request: Request) {
 	try {
 		const org = await resolveOrgFromRequest(request);
-		const orgFilter = orgIdCondition(commits.orgId, org?.id ?? null);
+		const orgFilter = countedCommits(org?.id ?? null);
 
 		// Start from January 1, 2026
 		const startDate = new Date(2026, 0, 1);
