@@ -1,131 +1,80 @@
 # Pulse
 
-Real-time shipping tracker for [Crafter Station](https://github.com/crafter-station).
+What Crafter Station ships, across its four GitHub orgs: crafter-station, crafter-research, crafter-lab and crafter-games.
 
-Tracks pushes to `main` across all org repos via GitHub webhooks.
+Live at [pulse.crafter.run](https://pulse.crafter.run).
+
+## What it shows
+
+- **Overview (`/`)**: projects shipped, repos created, stars gained and npm downloads for the selected period, each compared with the previous period. Recently shipped projects, a per-member table, the repos that gained the most stars, and repos created per month.
+- **Team (`/team`, `/team/[login]`)**: each core member's ships, repos, commits, a 12-week commit heatmap, the repos they created and their recent commits.
+- **Projects (`/projects`, `/projects/[org]/[name]`)**: every repo, with search and filters for status, creator and sort, and a page per repo with its star history, recent commits and contributors.
+
+Every number on the overview opens a drawer with the items behind it. The period (week, month or quarter) and the org are URL parameters (`?period=quarter&org=crafter-lab`), so any view can be shared as a link.
+
+## Definitions
+
+- **Repo created**: a non-fork repo whose GitHub creation date falls in the period.
+- **Shipped**: a repo created in the period that has a homepage or a published package in the `packages` table.
+- **Creator**: the sender of the `repository.created` webhook. For older repos, the author of the first commit (`creator_source = first_commit`).
+- **Commits**: pushes to each repo's default branch by human authors, excluding future-dated commits. Bots never count.
+- **Stars gained**: current stars minus the stars on the first day of the period, taken from the daily `repo_stats` snapshots.
+
+Private repos count toward totals, but their names, messages and links are never shown.
+
+## Team roster
+
+`lib/roster.ts` is the source of truth for who appears by name. It mirrors [crafter.run/team](https://crafter.run/team).
+
+- `CORE_MEMBERS`: the active core team. Add `aliases` when a member commits from more than one GitHub login.
+- `FORMER_MEMBER_LOGINS`: never shown by name. Their commits still count toward org totals.
+- `BOT_LOGINS`: excluded from every metric, together with any login ending in `[bot]`.
+
+To add or remove a member, edit this file and open a PR.
+
+## Data flow
+
+```mermaid
+flowchart LR
+  GH[GitHub org webhooks] -->|push, repository| WH["/api/webhooks/github"]
+  WH --> DB[(Neon Postgres)]
+  CRON1["/api/cron/sync-repos, daily"] -->|GraphQL, one query per org| DB
+  CRON2["/api/cron/update-distribution, every 6h"] -->|npm, skills.sh, releases| DB
+  DB --> UI[Server-rendered pages]
+```
+
+- **Webhooks**: each org has a webhook for `push` and `repository` events pointing at `/api/webhooks/github`, signed with `GITHUB_WEBHOOK_SECRET`. Events from orgs missing from the `orgs` table are ignored.
+- **Repo sync**: stores stars, forks, homepage, archived and fork flags, default branch and creation date, plus one `repo_stats` row per repo per day.
+- **Distribution**: npm downloads, skills.sh installs and release downloads for the packages in `packages`.
 
 ## Stack
 
-- **Framework**: Next.js 16 + React 19 + TypeScript
-- **Styling**: Tailwind CSS 4
-- **Database**: Neon (Serverless Postgres) + Drizzle ORM
-- **Webhooks**: GitHub org webhooks → Next.js API route
-- **Deployment**: Vercel
+Next.js 16 with React 19 Server Components, Neon Postgres with Drizzle, and [ui-sdk](https://ui-sdk.dev) for the drawer, segmented control and select. Styling follows the [Crafter design guide](https://crafter.run/design.md): Crafter Sans, the paper and olive palette in light and dark, and a single yellow accent, all in `app/pulse.css`.
 
-## Features
-
-- **Real-time Activity Feed**: See commits as they happen
-- **Stats Dashboard**: Commits today, active repos, team streak
-- **Weekly Leaderboard**: Top contributors for the week
-- **Auto-discovery**: Automatically tracks all crafter-station repos
-
-## Setup
-
-### 1. Install dependencies
+## Local setup
 
 ```bash
 bun install
+vercel env pull .env.local    # DATABASE_URL, GITHUB_TOKEN, GITHUB_WEBHOOK_SECRET, CRON_SECRET
+bun dev                       # https://pulse.localhost via portless
 ```
 
-### 2. Set up Neon database
+Point `DATABASE_URL` at a Neon branch, not production, while developing (`neonctl branches create --project-id <id> --parent production`).
 
-1. Create a Neon database at [neon.tech](https://neon.tech)
-2. Copy the connection string
+## Scripts
 
-### 3. Environment variables
+| Command | What it does |
+| --- | --- |
+| `bun run migrate:pulse-2` | Adds the repo metadata, creator and `repo_stats` schema, and registers the four orgs. Idempotent. |
+| `bun run sync-repos` | Same as the daily cron: syncs repo metadata and today's star counts. `--org <slug>` for one org. |
+| `bun run backfill --org <slug> --days <n>` | Loads commits from each repo's default branch. |
+| `bun run backfill-creators --since <date>` | Attributes repos without a creator to their first commit author. |
+| `bun run backfill-stars` | Rebuilds daily star history from stargazer timestamps. `--repo owner/name` for one repo. |
 
-Create `.env.local`:
+Star history from stargazers misses stars that were later removed, so the counts on past days can be slightly low. The current total always comes from GitHub.
 
-```env
-DATABASE_URL=postgresql://user:password@host/database
-GITHUB_WEBHOOK_SECRET=your_webhook_secret_here
-GITHUB_TOKEN=your_github_token_here
-```
+## Adding an org
 
-Generate webhook secret:
-
-```bash
-openssl rand -hex 32
-```
-
-### 4. Push database schema
-
-```bash
-bun db:push
-```
-
-### 5. Backfill historical data (optional)
-
-```bash
-bun backfill
-```
-
-This fetches the last 30 days of commits from all crafter-station repos.
-
-### 6. Run development server
-
-```bash
-bun dev
-```
-
-`bun dev` runs next through [portless](https://github.com/vercel-labs/portless),
-so the app is always available at a stable URL — no port juggling when
-other dev servers are running:
-
-[https://pulse.localhost](https://pulse.localhost)
-
-If the portless proxy is not running yet:
-
-```bash
-portless proxy start       # HTTPS on :443 (needs sudo on first run)
-portless proxy start -p 1355  # or without sudo on a custom port
-```
-
-To run next directly (bypassing portless) use `bun dev:raw`.
-
-## Deployment
-
-### 1. Deploy to Vercel
-
-```bash
-vercel --prod
-```
-
-Add environment variables in Vercel dashboard:
-
-- `DATABASE_URL`
-- `GITHUB_WEBHOOK_SECRET`
-
-### 2. Configure GitHub webhook
-
-1. Go to https://github.com/organizations/crafter-station/settings/hooks
-2. Add webhook:
-   - **Payload URL**: `https://pulse.crafterstation.com/api/webhooks/github`
-   - **Content type**: `application/json`
-   - **Secret**: Same as `GITHUB_WEBHOOK_SECRET`
-   - **Events**: Just `push` events
-   - **Active**: ✓
-
-### 3. Test
-
-Push a commit to any crafter-station repo and verify it appears in the activity feed.
-
-## API Routes
-
-- `GET /api/activity` - Recent commits (last 50)
-- `GET /api/stats` - Dashboard stats (commits today, active repos, streak)
-- `GET /api/leaderboard` - Weekly top contributors (last 7 days)
-- `POST /api/webhooks/github` - GitHub webhook handler
-
-## Database Scripts
-
-```bash
-bun db:generate  # Generate migrations
-bun db:push      # Apply schema to database
-bun db:studio    # Open Drizzle Studio
-bun backfill     # Seed with historical data
-```
-
-- [pulse.crafterstation.com](https://pulse.crafterstation.com)
-- [org.crafter.run](https://org.crafter.run)
-- [GitHub Org](https://github.com/crafter-station)
+1. Insert a row into `orgs` (see `scripts/migrate-pulse-2.ts`).
+2. Create an org webhook: payload URL `https://pulse.crafter.run/api/webhooks/github`, content type JSON, the same secret, events `push` and `repository`.
+3. Run `bun run sync-repos --org <slug>`, `bun run backfill --org <slug> --days <n>` and `bun run backfill-creators`.
