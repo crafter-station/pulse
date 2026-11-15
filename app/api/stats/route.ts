@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits, repos } from "@/lib/db/schema";
 import { orgIdCondition, resolveOrgFromRequest } from "@/lib/org-filter";
+import { coreAuthor, countedCommits } from "@/lib/roster";
 import {
 	getPeruISOWeek,
 	getPeruNow,
@@ -14,7 +15,7 @@ export async function GET(request: Request) {
 	try {
 		const org = await resolveOrgFromRequest(request);
 		const orgId = org?.id ?? null;
-		const commitsOrgFilter = orgIdCondition(commits.orgId, orgId);
+		const commitsOrgFilter = countedCommits(orgId);
 		const reposOrgFilter = orgIdCondition(repos.orgId, orgId);
 
 		const now = getPeruNow();
@@ -61,7 +62,9 @@ export async function GET(request: Request) {
 				count: sql<number>`count(distinct ${commits.authorUsername})::int`,
 			})
 			.from(commits)
-			.where(and(gte(commits.pushedAt, weekStart), commitsOrgFilter));
+			.where(
+				and(gte(commits.pushedAt, weekStart), commitsOrgFilter, coreAuthor()),
+			);
 
 		const allCommits = await db
 			.select({

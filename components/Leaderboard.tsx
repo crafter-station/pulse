@@ -6,6 +6,8 @@ import { formatNumber } from "@/lib/utils/format";
 
 interface LeaderboardMember {
   name: string;
+  displayName?: string;
+  role?: string;
   commits: number;
   additions: number;
   deletions: number;
@@ -118,7 +120,7 @@ export function Leaderboard() {
                 {leaderboard[0].avatarUrl ? (
                   <img
                     src={leaderboard[0].avatarUrl}
-                    alt={leaderboard[0].name}
+                    alt={leaderboard[0].displayName ?? leaderboard[0].name}
                     className="w-20 h-20 md:w-24 md:h-24 ring-4 ring-[#FFD800]/20"
                   />
                 ) : (
@@ -128,7 +130,7 @@ export function Leaderboard() {
                 )}
                 <div className="flex-1 text-center sm:text-left">
                   <div className="font-display text-2xl md:text-3xl font-black text-white mb-2 uppercase">
-                    {leaderboard[0].name}
+                    {leaderboard[0].displayName ?? leaderboard[0].name}
                   </div>
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-6 text-base md:text-lg">
                     <span className="font-black text-[#FFD800]">
@@ -164,7 +166,7 @@ export function Leaderboard() {
 
                   return (
                     <div
-                      key={member.name}
+                      key={member.displayName ?? member.name}
                       className="relative overflow-hidden p-4 md:p-6 bg-[#171717] border-2 border-[#333] hover:border-[#FFD800]/30 transition-colors"
                     >
                       <div className="flex items-center gap-3 md:gap-4">
@@ -174,7 +176,7 @@ export function Leaderboard() {
                         {member.avatarUrl ? (
                           <img
                             src={member.avatarUrl}
-                            alt={member.name}
+                            alt={member.displayName ?? member.name}
                             className="w-14 h-14 md:w-16 md:h-16 ring-2 ring-[#333] flex-shrink-0"
                           />
                         ) : (
@@ -184,7 +186,7 @@ export function Leaderboard() {
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="text-lg md:text-xl font-black text-white mb-1 truncate uppercase">
-                            {member.name}
+                            {member.displayName ?? member.name}
                           </div>
                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs md:text-sm">
                             <span className="font-black text-[#FFD800]">
@@ -219,7 +221,7 @@ export function Leaderboard() {
                   const position = i + 4;
                   return (
                     <div
-                      key={member.name}
+                      key={member.displayName ?? member.name}
                       className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-[#171717] border-2 border-[#333] hover:border-[#FFD800]/30 transition-colors"
                     >
                       <div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center bg-[#262626] text-[#737373] font-black text-sm md:text-base flex-shrink-0 border-2 border-[#333] font-mono">
@@ -228,7 +230,7 @@ export function Leaderboard() {
                       {member.avatarUrl ? (
                         <img
                           src={member.avatarUrl}
-                          alt={member.name}
+                          alt={member.displayName ?? member.name}
                           className="w-10 h-10 md:w-12 md:h-12 ring-2 ring-[#333] flex-shrink-0"
                         />
                       ) : (
@@ -238,7 +240,7 @@ export function Leaderboard() {
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="font-black text-white text-sm md:text-base truncate uppercase">
-                          {member.name}
+                          {member.displayName ?? member.name}
                         </div>
                         <div className="text-xs md:text-sm text-[#737373] font-mono">
                           {member.commits} commits //{" "}
