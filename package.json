@@ -15,7 +15,8 @@
     "update-avatars": "bun run scripts/update-avatars.ts",
     "migrate:pulse-2": "bun run scripts/migrate-pulse-2.ts",
     "sync-repos": "bun run scripts/sync-repos.ts",
-    "backfill-creators": "bun run scripts/backfill-creators.ts"
+    "backfill-creators": "bun run scripts/backfill-creators.ts",
+    "backfill-stars": "bun run scripts/backfill-star-history.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

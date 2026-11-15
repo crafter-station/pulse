@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { repos } from "../db/schema";
+import { repoStats, repos } from "../db/schema";
 import type { Org } from "../orgs";
 
 type RepoNode = {
@@ -75,6 +75,7 @@ export async function fetchOrgRepos(
 export async function syncOrgRepos(octokit: Octokit, org: Org): Promise<number> {
 	const nodes = await fetchOrgRepos(octokit, org.githubOrg);
 	const now = new Date();
+	const today = now.toISOString().slice(0, 10);
 
 	for (const r of nodes) {
 		const metadata = {
@@ -91,7 +92,7 @@ export async function syncOrgRepos(octokit: Octokit, org: Org): Promise<number> 
 			syncedAt: now,
 			updatedAt: now,
 		};
-		await db
+		const [row] = await db
 			.insert(repos)
 			.values({
 				orgId: org.id,
@@ -105,6 +106,14 @@ export async function syncOrgRepos(octokit: Octokit, org: Org): Promise<number> 
 					...metadata,
 					lastPushAt: sql`coalesce(${repos.lastPushAt}, excluded.last_push_at)`,
 				},
+			})
+			.returning({ id: repos.id });
+		await db
+			.insert(repoStats)
+			.values({ repoId: row.id, metric: "stars", value: r.stargazerCount, capturedOn: today })
+			.onConflictDoUpdate({
+				target: [repoStats.repoId, repoStats.metric, repoStats.capturedOn],
+				set: { value: r.stargazerCount },
 			});
 	}
 	return nodes.length;

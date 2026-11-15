@@ -3,6 +3,12 @@ import { db } from "./db";
 import { CORE_MEMBERS, getMember } from "./roster";
 import { getTeamLeaderboard } from "./team-leaderboard";
 
+const starsAt = (day: Date) => sql`coalesce((
+	select rs.value from repo_stats rs
+	where rs.repo_id = r.id and rs.metric = 'stars' and rs.captured_on <= ${day.toISOString().slice(0, 10)}::date
+	order by rs.captured_on desc limit 1
+), 0)`;
+
 export const PERIODS = {
 	week: { days: 7, label: "Last 7 days", previous: "previous 7 days" },
 	month: { days: 30, label: "Last 30 days", previous: "previous 30 days" },
@@ -19,6 +25,7 @@ export type Ship = {
 	name: string;
 	isPrivate: boolean;
 	org: string;
+	orgSlug: string;
 	homepage: string | null;
 	stars: number;
 	createdAt: string;
@@ -43,9 +50,10 @@ export type Overview = {
 	npmMonth: number;
 	skillsInstalls: number;
 	totalStars: number;
+	starsGained: { current: number; previous: number };
 	ships: Ship[];
 	team: TeamStat[];
-	mostStarred: { name: string; org: string; stars: number; url: string }[];
+	mostStarred: { name: string; org: string; orgSlug: string; stars: number; gained: number; url: string }[];
 	createdByMonth: { month: string; count: number }[];
 };
 
@@ -80,7 +88,7 @@ export async function getOverview(
 				from repos r where ${base}
 			`),
 			db.execute(sql`
-				select r.name, r.full_name, r.is_private, r.homepage, r.stars, r.github_created_at, r.creator_login, o.display_name as org
+				select r.name, r.full_name, r.is_private, r.homepage, r.stars, r.github_created_at, r.creator_login, o.display_name as org, o.slug as org_slug
 				from repos r join orgs o on o.id = r.org_id
 				where ${base} and r.github_created_at >= ${start} and ${SHIPPED}
 				order by r.github_created_at desc
@@ -95,11 +103,14 @@ export async function getOverview(
 				group by 1
 			`),
 			db.execute(sql`
-				select r.name, r.full_name, r.stars, o.display_name as org
-				from repos r join orgs o on o.id = r.org_id
-				where ${base} and not r.is_private and r.stars > 0
-				order by r.stars desc
-				limit 7
+				select * from (
+					select r.name, r.full_name, r.stars, o.display_name as org, o.slug as org_slug,
+						(r.stars - ${starsAt(start)})::int as gained,
+						(${starsAt(start)} - ${starsAt(prevStart)})::int as gained_prev
+					from repos r join orgs o on o.id = r.org_id
+					where ${base} and not r.is_private and r.stars > 0
+				) t
+				order by t.gained desc, t.stars desc
 			`),
 			db.execute(sql`
 				select to_char(date_trunc('month', r.github_created_at at time zone 'America/Lima'), 'YYYY-MM') as month,
@@ -169,6 +180,7 @@ export async function getOverview(
 				name: isPrivate ? "Private project" : String(r.name),
 				isPrivate,
 				org: String(r.org),
+				orgSlug: String(r.org_slug),
 				homepage: isPrivate ? null : ((r.homepage as string | null) ?? null),
 				stars: Number(r.stars ?? 0),
 				createdAt: new Date(r.github_created_at as string).toISOString(),
@@ -177,12 +189,23 @@ export async function getOverview(
 			};
 		}),
 		team,
-		mostStarred: rowsOf(starred).map((r) => ({
-			name: String(r.name),
-			org: String(r.org),
-			stars: Number(r.stars),
-			url: `https://github.com/${r.full_name}`,
-		})),
+		starsGained: rowsOf(starred).reduce<{ current: number; previous: number }>(
+			(acc, r) => ({
+				current: acc.current + Number(r.gained ?? 0),
+				previous: acc.previous + Number(r.gained_prev ?? 0),
+			}),
+			{ current: 0, previous: 0 },
+		),
+		mostStarred: rowsOf(starred)
+			.slice(0, 7)
+			.map((r) => ({
+				name: String(r.name),
+				org: String(r.org),
+				orgSlug: String(r.org_slug),
+				stars: Number(r.stars),
+				gained: Number(r.gained ?? 0),
+				url: `https://github.com/${r.full_name}`,
+			})),
 		createdByMonth: rowsOf(months).map((r) => ({
 			month: String(r.month),
 			count: Number(r.count),

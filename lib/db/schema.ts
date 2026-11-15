@@ -1,4 +1,5 @@
 import {
+	date,
 	pgTable,
 	text,
 	serial,
@@ -136,5 +137,25 @@ export const packageStats = pgTable(
 			t.capturedAt,
 		),
 		capturedAtIdx: index("package_stats_captured_at_idx").on(t.capturedAt),
+	}),
+);
+
+export const repoStats = pgTable(
+	"repo_stats",
+	{
+		id: serial("id").primaryKey(),
+		repoId: integer("repo_id")
+			.references(() => repos.id, { onDelete: "cascade" })
+			.notNull(),
+		metric: text("metric").notNull(),
+		value: integer("value").notNull(),
+		capturedOn: date("captured_on").notNull(),
+	},
+	(t) => ({
+		repoMetricDay: uniqueIndex("repo_stats_repo_metric_day").on(
+			t.repoId,
+			t.metric,
+			t.capturedOn,
+		),
 	}),
 );
