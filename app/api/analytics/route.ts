@@ -2,7 +2,8 @@ import { and, gte, lt, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits } from "@/lib/db/schema";
-import { orgIdCondition, resolveOrgFromRequest } from "@/lib/org-filter";
+import { resolveOrgFromRequest } from "@/lib/org-filter";
+import { coreAuthor, countedCommits, countedCommitsRaw } from "@/lib/roster";
 import { PERU_UTC_OFFSET, getPeruWeekStart } from "@/lib/utils/time";
 
 function getPeruPrevWeekStart(): Date {
@@ -19,9 +20,9 @@ export async function GET(request: Request) {
 	try {
 		const org = await resolveOrgFromRequest(request);
 		const orgId = org?.id ?? null;
-		const orgFilter = orgIdCondition(commits.orgId, orgId);
-		const orgIdLiteral = orgId;
-
+		const orgFilter = countedCommits(orgId);
+		const scopeRaw = countedCommitsRaw(orgId);
+		
 		const weekStart = getPeruWeekStart();
 		const prevWeekStart = getPeruPrevWeekStart();
 
@@ -144,7 +145,7 @@ export async function GET(request: Request) {
 					count: sql<number>`count(distinct ${commits.authorUsername})::int`,
 				})
 				.from(commits)
-				.where(and(gte(commits.pushedAt, weekStart), orgFilter))
+				.where(and(gte(commits.pushedAt, weekStart), orgFilter, coreAuthor()))
 				.then((r) => r[0]),
 
 			// Previous week contributors (distinct)
@@ -158,6 +159,7 @@ export async function GET(request: Request) {
 						gte(commits.pushedAt, prevWeekStart),
 						lt(commits.pushedAt, weekStart),
 						orgFilter,
+						coreAuthor(),
 					),
 				)
 				.then((r) => r[0]),
@@ -168,7 +170,7 @@ export async function GET(request: Request) {
 					sql`SELECT count(*)::int as count FROM (
 						SELECT ${commits.authorUsername}, min(${commits.pushedAt}) as first_commit
 						FROM ${commits}
-						WHERE (${orgIdLiteral}::int IS NULL OR org_id = ${orgIdLiteral}::int)
+						WHERE ${scopeRaw}
 						GROUP BY ${commits.authorUsername}
 					) sub WHERE sub.first_commit >= ${thirtyDaysAgo}`,
 				)
@@ -182,14 +184,14 @@ export async function GET(request: Request) {
 					SELECT repo_name, count(*)::int as commits
 					FROM commits
 					WHERE pushed_at >= ${weekStart}
-						AND (${orgIdLiteral}::int IS NULL OR org_id = ${orgIdLiteral}::int)
+						AND ${scopeRaw}
 					GROUP BY repo_name
 				),
 				prev_week AS (
 					SELECT repo_name, count(*)::int as commits
 					FROM commits
 					WHERE pushed_at >= ${prevWeekStart} AND pushed_at < ${weekStart}
-						AND (${orgIdLiteral}::int IS NULL OR org_id = ${orgIdLiteral}::int)
+						AND ${scopeRaw}
 					GROUP BY repo_name
 				)
 				SELECT

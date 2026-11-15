@@ -1,10 +1,11 @@
 import { createHash } from "crypto";
-import { desc, sql } from "drizzle-orm";
+import { and, desc, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { commits, repos } from "@/lib/db/schema";
 import { orgIdCondition, resolveOrgFromRequest } from "@/lib/org-filter";
 import { formatRelativeTime } from "@/lib/utils/time";
+import { countedCommits, visibleAuthor } from "@/lib/roster";
 
 const MAX_LIMIT = 100;
 const DEFAULT_LIMIT = 20;
@@ -27,7 +28,7 @@ export async function GET(request: Request) {
 
 		const org = await resolveOrgFromRequest(request);
 		const orgId = org?.id ?? null;
-		const commitsOrgFilter = orgIdCondition(commits.orgId, orgId);
+		const commitsOrgFilter = and(countedCommits(orgId), visibleAuthor());
 		const reposOrgFilter = orgIdCondition(repos.orgId, orgId);
 
 		const [recentCommits, allRepos, [{ count: total }]] = await Promise.all([

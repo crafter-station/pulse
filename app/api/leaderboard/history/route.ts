@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { weeklyLeaderboards } from "@/lib/db/schema";
 import { and, eq, sql } from "drizzle-orm";
+import { coreAuthor } from "@/lib/roster";
 
 /**
  * GET /api/leaderboard/history?year=2026&week=5
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
 				and(
 					eq(weeklyLeaderboards.year, parseInt(year)),
 					eq(weeklyLeaderboards.week, parseInt(week)),
+					coreAuthor(weeklyLeaderboards.username),
 				),
 			)
 			.orderBy(weeklyLeaderboards.rank);
