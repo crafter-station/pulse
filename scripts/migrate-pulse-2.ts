@@ -22,6 +22,26 @@ const MIGRATIONS: { name: string; sql: string }[] = [
 		`,
 	},
 	{
+		name: "103_repos_creator",
+		sql: `
+			ALTER TABLE "repos" ADD COLUMN IF NOT EXISTS "creator_login" text;
+			ALTER TABLE "repos" ADD COLUMN IF NOT EXISTS "creator_source" text;
+		`,
+	},
+	{
+		name: "104_repo_stats",
+		sql: `
+			CREATE TABLE IF NOT EXISTS "repo_stats" (
+				"id" serial PRIMARY KEY NOT NULL,
+				"repo_id" integer NOT NULL REFERENCES "repos"("id") ON DELETE CASCADE,
+				"metric" text NOT NULL,
+				"value" integer NOT NULL,
+				"captured_on" date NOT NULL
+			);
+			CREATE UNIQUE INDEX IF NOT EXISTS "repo_stats_repo_metric_day" ON "repo_stats" ("repo_id", "metric", "captured_on");
+		`,
+	},
+	{
 		name: "102_seed_lab_and_games_orgs",
 		sql: `
 			INSERT INTO "orgs" ("slug", "display_name", "github_org", "skills_sh_org", "description")

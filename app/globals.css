@@ -18,14 +18,14 @@
 }
 
 html {
-  background-color: #0a0a0a;
+  background-color: var(--c-bg);
   scroll-behavior: smooth;
   scroll-padding-top: 2rem;
 }
 
 body {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: "Crafter Sans Text", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -111,7 +111,8 @@ body {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    background: var(--c-bg);
+    color: var(--c-fg);
   }
 }
 

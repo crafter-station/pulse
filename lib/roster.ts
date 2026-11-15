@@ -82,7 +82,7 @@ export function isHiddenLogin(login: string): boolean {
 	return isBotLogin(login) || FORMER.includes(login.toLowerCase());
 }
 
-function inList(column: AnyColumn, values: string[]): SQL {
+function inList(column: AnyColumn | SQL, values: string[]): SQL {
 	return sql`lower(${column}) in (${sql.join(
 		values.map((v) => sql`${v}`),
 		sql`, `,
@@ -90,17 +90,17 @@ function inList(column: AnyColumn, values: string[]): SQL {
 }
 
 /** Author is a real person (not a bot). */
-export function humanAuthor(column: AnyColumn = commits.authorUsername): SQL {
+export function humanAuthor(column: AnyColumn | SQL = commits.authorUsername): SQL {
 	return sql`(not ${inList(column, BOTS)} and ${column} not like '%[bot]')`;
 }
 
 /** Author may be shown by name: not a bot and not a former member. */
-export function visibleAuthor(column: AnyColumn = commits.authorUsername): SQL {
+export function visibleAuthor(column: AnyColumn | SQL = commits.authorUsername): SQL {
 	return sql`(${humanAuthor(column)} and not ${inList(column, FORMER)})`;
 }
 
 /** Author belongs to the active core team. */
-export function coreAuthor(column: AnyColumn = commits.authorUsername): SQL {
+export function coreAuthor(column: AnyColumn | SQL = commits.authorUsername): SQL {
 	return inList(column, CORE_ALIASES);
 }
 
