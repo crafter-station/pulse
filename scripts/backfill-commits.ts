@@ -27,8 +27,9 @@ async function backfillOrg(
 ) {
 	console.log(`\n🔄 Backfilling ${org.githubOrg} (${daysBack}d)...`);
 
-	const { data: allRepos } = await octokit.repos.listForOrg({
+	const allRepos = await octokit.paginate(octokit.repos.listForOrg, {
 		org: org.githubOrg,
+		type: "all",
 		per_page: 100,
 	});
 
@@ -43,7 +44,7 @@ async function backfillOrg(
 		console.log(`\n  📁 ${repo.name}`);
 
 		try {
-			const { data: repoCommits } = await octokit.repos.listCommits({
+			const repoCommits = await octokit.paginate(octokit.repos.listCommits, {
 				owner: org.githubOrg,
 				repo: repo.name,
 				sha: repo.default_branch,

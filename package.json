@@ -12,7 +12,9 @@
     "db:studio": "drizzle-kit studio",
     "backfill": "bun run scripts/backfill-commits.ts",
     "update-stats": "bun run scripts/update-commit-stats.ts",
-    "update-avatars": "bun run scripts/update-avatars.ts"
+    "update-avatars": "bun run scripts/update-avatars.ts",
+    "migrate:pulse-2": "bun run scripts/migrate-pulse-2.ts",
+    "sync-repos": "bun run scripts/sync-repos.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
