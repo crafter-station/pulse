@@ -70,9 +70,10 @@ export async function POST(request: NextRequest) {
 
 		const payload = JSON.parse(body);
 
-		if (payload.ref !== "refs/heads/main") {
+		const defaultBranch = payload.repository?.default_branch || "main";
+		if (payload.ref !== `refs/heads/${defaultBranch}`) {
 			return NextResponse.json(
-				{ message: "Non-main branch, ignored" },
+				{ message: "Non-default branch, ignored" },
 				{ status: 200 },
 			);
 		}
