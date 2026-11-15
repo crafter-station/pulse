@@ -22,6 +22,13 @@ const MIGRATIONS: { name: string; sql: string }[] = [
 		`,
 	},
 	{
+		name: "103_repos_creator",
+		sql: `
+			ALTER TABLE "repos" ADD COLUMN IF NOT EXISTS "creator_login" text;
+			ALTER TABLE "repos" ADD COLUMN IF NOT EXISTS "creator_source" text;
+		`,
+	},
+	{
 		name: "102_seed_lab_and_games_orgs",
 		sql: `
 			INSERT INTO "orgs" ("slug", "display_name", "github_org", "skills_sh_org", "description")

@@ -31,6 +31,38 @@ export async function POST(request: NextRequest) {
 
 		if (event === "repository") {
 			const payload = JSON.parse(body);
+			if (payload.action === "created") {
+				const org = payload.organization?.login
+					? await getOrgByGithubName(payload.organization.login)
+					: null;
+				if (!org) {
+					return NextResponse.json(
+						{ message: "Org not registered, ignored" },
+						{ status: 200 },
+					);
+				}
+				const r = payload.repository;
+				const creator = {
+					fullName: r.full_name,
+					isPrivate: Boolean(r.private),
+					isFork: Boolean(r.fork),
+					description: r.description ?? null,
+					homepage: r.homepage || null,
+					defaultBranch: r.default_branch ?? null,
+					githubCreatedAt: new Date(r.created_at),
+					creatorLogin: payload.sender?.login ?? null,
+					creatorSource: "webhook",
+					updatedAt: new Date(),
+				};
+				await db
+					.insert(repos)
+					.values({ orgId: org.id, name: r.name, ...creator })
+					.onConflictDoUpdate({
+						target: [repos.orgId, repos.name],
+						set: creator,
+					});
+				return NextResponse.json({ message: "Repository created" }, { status: 200 });
+			}
 			if (payload.action === "publicized" || payload.action === "privatized") {
 				const repoName = payload.repository.name;
 				const ownerLogin =

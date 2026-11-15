@@ -60,6 +60,8 @@ export const repos = pgTable(
 		defaultBranch: text("default_branch"),
 		githubCreatedAt: timestamp("github_created_at"),
 		syncedAt: timestamp("synced_at"),
+		creatorLogin: text("creator_login"),
+		creatorSource: text("creator_source"),
 		createdAt: timestamp("created_at").defaultNow(),
 		updatedAt: timestamp("updated_at").defaultNow(),
 	},

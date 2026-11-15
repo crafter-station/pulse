@@ -14,12 +14,15 @@
     "update-stats": "bun run scripts/update-commit-stats.ts",
     "update-avatars": "bun run scripts/update-avatars.ts",
     "migrate:pulse-2": "bun run scripts/migrate-pulse-2.ts",
-    "sync-repos": "bun run scripts/sync-repos.ts"
+    "sync-repos": "bun run scripts/sync-repos.ts",
+    "backfill-creators": "bun run scripts/backfill-creators.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "@octokit/rest": "^22.0.1",
     "@octokit/webhooks": "^14.2.0",
+    "@ui-sdk/core": "^0.1.0-beta.1",
+    "@ui-sdk/react": "^0.1.0-beta.1",
     "@vercel/analytics": "^1.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
